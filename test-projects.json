@@ -1,0 +1,149 @@
+[
+  {
+    "_id": "project-1743541087807",
+    "name": "123",
+    "days": [
+      {
+        "socialNetwork": "LinkedIn",
+        "images": [
+          "/uploads/1743541108869.png",
+          "/uploads/1743541111639.png",
+          "/uploads/1743541114364.png",
+          "/uploads/1743541116529.png"
+        ],
+        "text": "",
+        "date": "2025-04-02",
+        "contentType": "Пост"
+      },
+      {
+        "socialNetwork": "Instagram",
+        "images": [
+          "/uploads/1743541121190.png",
+          "/uploads/1743541123180.png"
+        ],
+        "text": "",
+        "date": "2025-04-03",
+        "contentType": "Пост"
+      },
+      {
+        "socialNetwork": "",
+        "images": [],
+        "text": "",
+        "date": "2025-04-04"
+      },
+      {
+        "socialNetwork": "",
+        "images": [],
+        "text": "",
+        "date": "2025-04-05"
+      },
+      {
+        "socialNetwork": "",
+        "images": [],
+        "text": "",
+        "date": "2025-04-06"
+      },
+      {
+        "socialNetwork": "",
+        "images": [],
+        "text": "",
+        "date": "2025-04-07"
+      },
+      {
+        "socialNetwork": "",
+        "images": [],
+        "text": "",
+        "date": "2025-04-08"
+      }
+    ],
+    "owner": "test-user-123",
+    "createdAt": "2025-04-01T20:58:07.807Z",
+    "updatedAt": "2025-04-02T01:12:44.653Z"
+  },
+  {
+    "_id": "project-1743541168793",
+    "name": "Agarto test",
+    "days": [
+      {
+        "date": "2025-04-02",
+        "socialNetwork": "Facebook",
+        "contentType": "Статья",
+        "images": [
+          "/uploads/p_2_img_1_1743596854452_7222.png?dayId=day-0-1743596872804-1186",
+          "/uploads/p_2_img_2_1743596854452_131.png?dayId=day-0-1743596872804-1186",
+          "/uploads/p_2_img_0_1743596854450_521.png?dayId=day-0-1743596872804-1186"
+        ],
+        "text": "",
+        "id": "day-0-1743596872804-1186"
+      },
+      {
+        "date": "2025-04-03",
+        "socialNetwork": "Instagram",
+        "contentType": "Пост",
+        "images": [
+          "/uploads/p_2_img_0_1743598549058_4488.png?dayId=day-1-1743596872804-6781",
+          "/uploads/p_2_img_1_1743598549059_851.png?dayId=day-1-1743596872804-6781",
+          "/uploads/p_2_img_2_1743598549059_9535.png?dayId=day-1-1743596872804-6781",
+          "/uploads/p_2_img_3_1743598850782_2586.png?dayId=day-1-1743596872804-6781"
+        ],
+        "text": "",
+        "id": "day-1-1743596872804-6781"
+      },
+      {
+        "date": "2025-04-04",
+        "socialNetwork": "Telegram",
+        "contentType": "Пост",
+        "images": [],
+        "text": "",
+        "id": "day-2-1743597018109-8259"
+      }
+    ],
+    "owner": "test-user-123",
+    "createdAt": "2025-04-01T20:59:28.793Z",
+    "updatedAt": "2025-04-02T13:57:20.543Z",
+    "figmaUrl": "https://www.figma.com/design/drBnkF9hfVojzriA93tCWg/M2AAA-social?node-id=0-1&p=f&t=pt5iKq0aC1bE2ULP-0"
+  },
+  {
+    "_id": "project-1743541168793",
+    "name": "Agarto test",
+    "days": [
+      {
+        "date": "2025-04-02",
+        "socialNetwork": "Facebook",
+        "contentType": "Статья",
+        "images": [
+          "/uploads/p_2_img_1_1743596854452_7222.png?dayId=day-0-1743596872804-1186",
+          "/uploads/p_2_img_2_1743596854452_131.png?dayId=day-0-1743596872804-1186",
+          "/uploads/p_2_img_0_1743596854450_521.png?dayId=day-0-1743596872804-1186"
+        ],
+        "text": "",
+        "id": "day-0-1743596872804-1186"
+      },
+      {
+        "date": "2025-04-03",
+        "socialNetwork": "Instagram",
+        "contentType": "Пост",
+        "images": [
+          "/uploads/p_2_img_0_1743598549058_4488.png?dayId=day-1-1743596872804-6781",
+          "/uploads/p_2_img_1_1743598549059_851.png?dayId=day-1-1743596872804-6781",
+          "/uploads/p_2_img_2_1743598549059_9535.png?dayId=day-1-1743596872804-6781",
+          "/uploads/p_2_img_3_1743598850782_2586.png?dayId=day-1-1743596872804-6781"
+        ],
+        "text": "",
+        "id": "day-1-1743596872804-6781"
+      },
+      {
+        "date": "2025-04-04",
+        "socialNetwork": "Telegram",
+        "contentType": "Пост",
+        "images": [],
+        "text": "",
+        "id": "day-2-1743597018109-8259"
+      }
+    ],
+    "owner": "test-user-222",
+    "createdAt": "2025-04-01T20:59:28.793Z",
+    "updatedAt": "2025-04-02T13:57:03.662Z",
+    "figmaUrl": "https://www.figma.com/design/drBnkF9hfVojzriA93tCWg/M2AAA-social?node-id=0-1&p=f&t=pt5iKq0aC1bE2ULP-0"
+  }
+]

@@ -1,0 +1,756 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 31, 41, 55;
+  --background-rgb: 249, 250, 251;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+.calendar-container {
+  display: flex;
+  overflow-x: auto;
+  min-height: calc(100vh - 200px);
+}
+
+.day-column {
+  min-width: 300px;
+  max-width: 300px;
+  border-right: 1px solid #e5e7eb;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.day-column:last-child {
+  border-right: none;
+}
+
+.day-column-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.day-column-empty:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  position: relative;
+}
+
+.column-number {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.date-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.date-display:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.date-icon {
+  margin-left: 5px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.date-input-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.date-input {
+  padding: 5px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  text-align: center;
+  width: 80%;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Стили для кнопки удаления дня */
+.delete-day-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  border-radius: 4px;
+  padding: 5px;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+  font-size: 12px;
+}
+
+.delete-day-button:hover {
+  background-color: rgba(220, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+/* Стили для оверлея при наведении на изображение */
+.image-hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.upload-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.upload-text {
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Кнопки копирования */
+.copy-button {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  height: 32px;
+  padding: 0 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-button:hover {
+  background-color: #f3f4f6;
+}
+
+/* Кнопка копирования дня */
+.copy-day-button {
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  height: 32px;
+  padding: 0 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-day-button:hover {
+  background-color: #f3f4f6;
+}
+
+/* Стили для кнопок в режиме демонстрации */
+.copy-button-demo {
+  background-color: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0284c7;
+  min-width: 32px;
+  height: 32px;
+}
+
+.copy-button-demo:hover {
+  background-color: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+.copy-button-demo span {
+  margin-left: 4px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Стили для редактора Quill */
+.quill-editor {
+  margin-bottom: 10px;
+}
+
+.quill-editor .ql-container {
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  background: #fff;
+  min-height: 150px;
+}
+
+.quill-editor .ql-toolbar {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  background: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+.quill-editor .ql-editor {
+  min-height: 150px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.quill-editor .ql-editor p {
+  margin-bottom: 0.5em;
+}
+
+/* Позиционирование кнопки копирования для текстового редактора */
+.text-area {
+  position: relative;
+}
+
+.text-area .copy-button {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.text-area .copy-button:hover {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+/* Стили для кастомного выпадающего списка социальных сетей */
+.social-network-dropdown-button {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  cursor: pointer;
+  min-width: 200px;
+  margin-right: 8px;
+  transition: all 0.2s;
+}
+
+.social-network-dropdown-button:hover {
+  background-color: #f9fafb;
+}
+
+.social-network-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 10;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.social-network-dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.social-network-dropdown-item:hover {
+  background-color: #f3f4f6;
+}
+
+/* Стили для кастомного выпадающего списка типов контента */
+.content-type-dropdown-button {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  cursor: pointer;
+  min-width: 200px;
+  margin-right: 8px;
+  transition: all 0.2s;
+}
+
+.content-type-dropdown-button:hover {
+  background-color: #f9fafb;
+}
+
+.content-type-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 10;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.content-type-dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.content-type-dropdown-item:hover {
+  background-color: #f3f4f6;
+}
+
+/* Стили для выпадающих списков */
+.social-network-dropdown-button,
+.content-type-dropdown-button,
+.social-network-display,
+.content-type-display,
+.social-network-dropdown-item,
+.content-type-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.social-network-icon,
+.content-type-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-network-name,
+.content-type-name {
+  display: inline-block;
+}
+
+.image-area {
+  max-height: 800px;
+  overflow-y: auto;
+  position: relative;
+  padding: 8px;
+}
+
+/* Базовая сетка */
+.image-grid {
+  display: grid;
+  gap: 8px;
+}
+
+/* Стили для 1 изображения */
+.image-grid-1 {
+  display: block;
+}
+
+/* Стили для 2 изображений */
+.image-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Стили для 3+ изображений */
+.image-grid-3plus {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.empty-image-area {
+  border: 2px dashed #e5e7eb;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  background-color: #f9fafb;
+  border-radius: 4px;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.empty-image-area:hover {
+  border-color: #3B82F6;
+}
+
+.image-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.image-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  max-height: 300px;
+  transition: all 0.2s ease;
+}
+
+.image-container:hover img {
+  filter: brightness(0.9);
+}
+
+.image-container.dragging {
+  opacity: 0.6;
+  transform: scale(1.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+}
+
+.image-container.drop-target {
+  border: 2px dashed #3B82F6;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.delete-image-button {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+  font-size: 12px;
+}
+
+.delete-image-button:hover {
+  background-color: rgba(220, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.copy-image-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: rgba(59, 130, 246, 0.7);
+  color: white;
+  border-radius: 4px;
+  padding: 5px;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+  font-size: 12px;
+}
+
+.copy-image-button:hover {
+  background-color: rgba(37, 99, 235, 0.9);
+  transform: scale(1.1);
+}
+
+.image-grid-multi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.text-area {
+  flex-grow: 1;
+  position: relative;
+  overflow-y: auto;
+}
+
+.copy-button {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.delete-image-button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+}
+
+.delete-image-button:hover {
+  background-color: rgba(220, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.social-network-selector {
+  padding: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dropzone {
+  border: 2px dashed #e5e7eb;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  background-color: #f9fafb;
+}
+
+.dropzone:hover {
+  border-color: #3B82F6;
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 400px;
+  padding: 24px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.projects-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.project-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.project-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+/* Стили для совместного редактирования */
+.day-column-locked {
+  opacity: 0.7;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.day-column-active {
+  position: relative;
+  box-shadow: 0 0 0 3px;
+  transition: box-shadow 0.3s ease;
+}
+
+.user-badge {
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: white;
+  z-index: 10;
+  white-space: nowrap;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.active-users-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.active-user-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.user-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+/* Стили для перетаскивания изображений между колонками */
+.drop-target-empty {
+  border: 2px dashed #3B82F6;
+  background-color: rgba(59, 130, 246, 0.1);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    background-color: rgba(59, 130, 246, 0.05);
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.2);
+  }
+  100% {
+    background-color: rgba(59, 130, 246, 0.05);
+  }
+}
+
+.image-upload-placeholder {
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+  padding: 20px;
+  text-align: center;
+  background-color: #f9f9f9;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.image-upload-placeholder:hover {
+  border-color: #3B82F6;
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.image-upload-icon {
+  font-size: 2rem;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.image-upload-text {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Стили для панели инструментов создания изображений */
+.image-create-tools {
+  background-color: #f9fafb;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 12px;
+}
+
+.image-tool-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 32%;
+}
+
+.image-tool-button:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.image-tool-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.image-tool-icon {
+  font-size: 18px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-tool-text {
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.figma-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.chatgpt-icon {
+  width: 18px;
+  height: 18px;
+}
