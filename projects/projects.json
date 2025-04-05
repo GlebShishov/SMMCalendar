@@ -1,0 +1,16 @@
+{
+  "projects": [
+    {
+      "id": "agarto-test",
+      "name": "Agarto test",
+      "createdAt": "2024-03-20T10:00:00.000Z",
+      "lastModified": "2024-03-20T10:00:00.000Z",
+      "createdBy": "test-user-123",
+      "description": "Тестовый проект для демонстрации",
+      "status": "active",
+      "startDate": "2024-03-20",
+      "endDate": "2024-03-22"
+    }
+  ],
+  "lastUpdated": "2024-03-20T10:00:00.000Z"
+} 

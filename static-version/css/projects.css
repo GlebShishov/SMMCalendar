@@ -1,0 +1,215 @@
+/* Импортируем файл с переменными */
+@import url('variables.css');
+
+/* Стили для хедера с кнопками */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-buttons {
+    display: flex;
+    gap: var(--gap-sm);
+}
+
+.btn-secondary {
+    background-color: var(--color-secondary);
+    color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-secondary-hover);
+}
+
+/* Контейнер проектов */
+.projects-container {
+    padding: var(--space-lg);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--gap-lg);
+    overflow-y: auto;
+    max-height: calc(100vh - 80px);
+}
+
+/* Карточка проекта */
+.project-card {
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width-thin) var(--border-style-solid) var(--border-color);
+    padding: var(--space-lg);
+    transition: all var(--transition-speed-fast);
+    cursor: pointer;
+}
+
+.project-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.project-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--space-sm);
+    color: var(--text-primary);
+}
+
+.project-description {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+    line-height: 1.4;
+    max-height: 60px;
+    overflow: hidden;
+}
+
+.project-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.project-date {
+    display: block;
+}
+
+/* Модальное окно */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: var(--z-index-modal);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    width: var(--modal-width);
+    max-width: 90%;
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: var(--border-width-thin) var(--border-style-solid) var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-medium);
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: var(--font-size-xxl);
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.close-modal:hover {
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: var(--space-lg);
+}
+
+/* Формы */
+.form-group {
+    margin-bottom: var(--space-lg);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: var(--space-sm);
+    border: var(--border-width-thin) var(--border-style-solid) var(--color-gray-400);
+    border-radius: var(--border-radius-md);
+    font-size: var(--font-size-sm);
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--gap-sm);
+    margin-top: var(--space-lg);
+}
+
+.btn-cancel {
+    background-color: var(--color-secondary);
+    color: var(--text-secondary);
+}
+
+.btn-cancel:hover {
+    background-color: var(--color-secondary-hover);
+}
+
+/* Сообщение о директории */
+.directory-selection {
+    max-width: var(--modal-width);
+    margin: 100px auto;
+    text-align: center;
+    padding: var(--space-xl);
+    background-color: var(--color-gray-100);
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width-thin) var(--border-style-solid) var(--color-gray-400);
+}
+
+.directory-selection p {
+    margin-bottom: var(--space-lg);
+    color: var(--text-secondary);
+    font-size: var(--font-size-md);
+}
+
+/* Пустое состояние */
+.empty-state {
+    text-align: center;
+    padding: var(--space-xxl) var(--space-lg);
+    color: var(--text-muted);
+}
+
+.empty-state i {
+    font-size: 40px;
+    margin-bottom: var(--space-md);
+    color: var(--color-gray-400);
+}
+
+.empty-state h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #666;
+}
+
+.empty-state p {
+    font-size: 14px;
+    max-width: 400px;
+    margin: 0 auto 20px;
+} 

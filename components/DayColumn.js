@@ -1,13 +1,15 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { FaPlus, FaCopy, FaCalendarAlt, FaTrash, FaUpload, FaFacebook, FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaVk, FaTelegram, FaPinterest, FaLinkedin, FaGlobe, FaRegNewspaper, FaRegCircle, FaRegFileAlt, FaRobot, FaClipboard } from 'react-icons/fa';
+import { FaPlus, FaCopy, FaCalendarAlt, FaTrash, FaUpload, FaFacebook, FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaVk, FaTelegram, FaPinterest, FaLinkedin, FaGlobe, FaRegNewspaper, FaRegCircle, FaRegFileAlt, FaRobot, FaClipboard, FaLock, FaUnlock, FaEdit, FaSave, FaTimes, FaImage, FaLink } from 'react-icons/fa';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
+import toast from 'react-hot-toast';
+import Image from 'next/image';
 
 // Динамический импорт React-Quill (только на клиенте)
 const ReactQuill = dynamic(() => import('react-quill'), { 
   ssr: false,
-  loading: () => <p>Loading Editor...</p>
+  loading: () => <div className="loading-editor">Загрузка редактора...</div>
 });
 
 // Импорт стилей React-Quill
@@ -16,69 +18,20 @@ import 'react-quill/dist/quill.snow.css';
 // Модули для настройки панели инструментов Quill
 const quillModules = {
   toolbar: [
-    ['bold', 'italic', 'underline', 'strike'],        // форматирование текста
-    ['blockquote', 'code-block'],                     // цитата и моноширинный текст
-    ['link'],                                         // ссылки
-    [{ 'list': 'ordered'}, { 'list': 'bullet' }],     // списки
-    ['clean']                                         // удаление форматирования
-  ],
-  keyboard: {
-    bindings: {
-      bold: {
-        key: 'B',
-        ctrlKey: true,
-        handler: function(range, context) {
-          this.quill.format('bold', !context.format.bold);
-        }
-      },
-      italic: {
-        key: 'I',
-        ctrlKey: true,
-        handler: function(range, context) {
-          this.quill.format('italic', !context.format.italic);
-        }
-      },
-      underline: {
-        key: 'U',
-        ctrlKey: true,
-        handler: function(range, context) {
-          this.quill.format('underline', !context.format.underline);
-        }
-      },
-      strike: {
-        key: 'X',
-        ctrlKey: true,
-        shiftKey: true,
-        handler: function(range, context) {
-          this.quill.format('strike', !context.format.strike);
-        }
-      },
-      blockquote: {
-        key: '.',
-        ctrlKey: true,
-        shiftKey: true,
-        handler: function(range, context) {
-          this.quill.format('blockquote', !context.format.blockquote);
-        }
-      },
-      'code-block': {
-        key: 'M',
-        ctrlKey: true,
-        shiftKey: true,
-        handler: function(range, context) {
-          this.quill.format('code-block', !context.format['code-block']);
-        }
-      }
-    }
-  }
+    [{ 'header': [1, 2, false] }],
+    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+    [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+    ['link'],
+    ['clean']
+  ]
 };
 
 // Форматы, которые будут доступны
 const quillFormats = [
-  'bold', 'italic', 'underline', 'strike',
-  'blockquote', 'code-block',
-  'link',
-  'list', 'bullet'
+  'header',
+  'bold', 'italic', 'underline', 'strike', 'blockquote',
+  'list', 'bullet', 'indent',
+  'link'
 ];
 
 const socialNetworks = [
@@ -130,28 +83,90 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('ru-RU', options);
 };
 
-export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDelete, project, activeUsers, socket }) {
+// Добавляем компонент-обертку для ReactQuill
+const QuillWrapper = ({ value, onChange, readOnly, placeholder }) => {
+  const [isReady, setIsReady] = useState(false);
+  const [editor, setEditor] = useState(null);
+
+  // Обработчик для инициализации редактора
+  const handleEditorInit = (editor) => {
+    if (editor) {
+      setEditor(editor);
+      setIsReady(true);
+    }
+  };
+
+  // Эффект для обработки изменений в редакторе
+  useEffect(() => {
+    if (editor && isReady) {
+      const handleChange = () => {
+        const content = editor.root.innerHTML;
+        if (content !== value) {
+          onChange(content);
+        }
+      };
+
+      editor.on('text-change', handleChange);
+      return () => {
+        editor.off('text-change', handleChange);
+      };
+    }
+  }, [editor, isReady, value, onChange]);
+
+  // Добавляем стили для Quill при монтировании
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (!document.querySelector('link[href*="quill.snow.css"]')) {
+        const link = document.createElement('link');
+        link.href = 'https://cdn.quilljs.com/1.3.7/quill.snow.css';
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+      }
+    }
+  }, []);
+
+  return (
+    <div className="quill-editor-container">
+      {typeof window !== 'undefined' && (
+        <ReactQuill
+          value={value}
+          onChange={onChange}
+          modules={quillModules}
+          formats={quillFormats}
+          readOnly={readOnly || !isReady}
+          placeholder={placeholder}
+          theme="snow"
+          className={`bg-white rounded-lg ${readOnly ? 'opacity-75' : ''}`}
+          onInit={handleEditorInit}
+        />
+      )}
+    </div>
+  );
+};
+
+export default function DayColumn({ day, index, data = {}, onUpdate, isReadOnly, onDelete, project, activeUsers, socket }) {
   const { data: session } = useSession();
   const router = useRouter();
   const { id: projectId } = router.query;
-  const [socialNetwork, setSocialNetwork] = useState(data.socialNetwork || 'Telegram');
-  const [contentType, setContentType] = useState(data.contentType || 'Пост');
-  const [images, setImages] = useState(data.images || []);
-  const [text, setText] = useState(data.text || '');
+  const [socialNetwork, setSocialNetwork] = useState(data?.socialNetwork || 'Telegram');
+  const [contentType, setContentType] = useState(data?.contentType || 'text');
+  const [images, setImages] = useState(data?.images || []);
+  const [text, setText] = useState(data?.text || '');
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(data.date ? new Date(data.date) : new Date());
+  const [selectedDate, setSelectedDate] = useState(data?.date ? new Date(data.date) : new Date());
   const [isEditing, setIsEditing] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const fileInputRef = useRef(null);
   const datePickerRef = useRef(null);
+  const dateInputRef = useRef(null);
   const columnRef = useRef(null);
   const quillRef = useRef(null);
   
   // Получаем информацию о том, кто редактирует этот день
-  const dayEditor = activeUsers?.getDayEditor ? activeUsers.getDayEditor(day.id) : null;
+  const dayEditor = activeUsers?.getDayEditor ? activeUsers.getDayEditor(day?.id) : null;
   
   // Проверяем, заблокирован ли день другим пользователем
-  const isDayLocked = activeUsers?.isDayLocked ? activeUsers.isDayLocked(day.id) : false;
+  const isDayLocked = activeUsers?.isDayLocked ? activeUsers.isDayLocked(day?.id) : false;
   
   // Определяем, может ли текущий пользователь редактировать этот день
   const canEdit = !isReadOnly && !isDayLocked;
@@ -159,7 +174,7 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
   // Определяем, редактирует ли текущий пользователь этот день
   const isEditingByCurrentUser = dayEditor && activeUsers?.currentUser && dayEditor.userId === activeUsers.currentUser.userId;
   
-  const [isActive, setIsActive] = useState(!!data.text || data.images.length > 0);
+  const [isActive, setIsActive] = useState(Boolean(data?.text || (data?.images && data?.images.length > 0)));
   const [hoveredImageIndex, setHoveredImageIndex] = useState(null);
   const [isEditingDate, setIsEditingDate] = useState(false);
   const [dateInputValue, setDateInputValue] = useState('');
@@ -177,7 +192,7 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
 
   // Функция для отображения иконки текущей социальной сети
   const renderSocialNetworkIcon = () => {
-    if (data.socialNetwork && socialNetworkIcons[data.socialNetwork]) {
+    if (data?.socialNetwork && socialNetworkIcons[data.socialNetwork]) {
       return socialNetworkIcons[data.socialNetwork];
     }
     return <FaGlobe />;
@@ -185,7 +200,7 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
 
   // Функция для отображения иконки текущего типа контента
   const renderContentTypeIcon = () => {
-    if (data.contentType && contentTypeIcons[data.contentType]) {
+    if (data?.contentType && contentTypeIcons[data.contentType]) {
       return contentTypeIcons[data.contentType];
     }
     return <FaRegNewspaper />;
@@ -227,10 +242,46 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
     }
   }, []);
   
+  // Инициализация Socket.IO при монтировании компонента
+  useEffect(() => {
+    if (!socket || !projectId) return;
+
+    // Присоединяемся к комнате проекта
+    socket.emit('join-project', projectId);
+
+    // Подписываемся на обновления изображений
+    socket.on('imageReorder', ({ dayId, images, userId }) => {
+      if (dayId === day.id && userId !== session?.user?.id) {
+        onUpdate(index, {
+          ...data,
+          images
+        });
+      }
+    });
+
+    return () => {
+      socket.off('imageReorder');
+    };
+  }, [socket, projectId, day.id, session?.user?.id]);
+
+  // Функция для отправки обновлений изображений
+  const emitImageReorder = (images) => {
+    if (!socket || !projectId) return;
+
+    socket.emit('reorder-images', {
+      projectId,
+      dayId: day.id,
+      images,
+      userId: session?.user?.id
+    });
+  };
+  
   // Handle creating a new column content
   const handleCreateContent = () => {
-    if (isReadOnly) return;
-    
+    if (isReadOnly) {
+      toast.error('Этот день заблокирован для редактирования');
+      return;
+    }
     setIsActive(true);
     onUpdate(index, {
       ...data,
@@ -267,42 +318,41 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
     setShowContentTypeDropdown(false);
   };
   
-  // Handle text change
+  // Обновляем handleTextChange для автоматического сохранения
   const handleTextChange = (value) => {
-    if (isReadOnly) return;
+    if (isReadOnly || isDayLocked) return;
     
-    // Для React-Quill value уже содержит новое значение
-    const newData = { ...data, text: value };
-    onUpdate(index, newData);
+    setText(value);
+    // Автоматически сохраняем изменения
+    onUpdate(index, {
+      ...data,
+      text: value,
+      images,
+      socialNetwork,
+      contentType,
+      lastModified: new Date().toISOString()
+    });
   };
   
   // Handle image drop
   const handleDrop = (e) => {
-    if (isReadOnly) return;
-    
+    if (isReadOnly || isDayLocked) return;
     e.preventDefault();
+    setIsDraggingOver(false);
     
-    // Get files from drop event
-    const files = e.dataTransfer.files;
-    if (files.length === 0) return;
-    
-    // Если перетащено несколько файлов, загружаем их все сразу
-    if (files.length > 1) {
-      uploadMultipleImages(files);
-    } else {
-      // Если перетащен один файл, используем старый метод
-      uploadImage(files[0]);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handleFileInputChange({ target: { files } });
     }
   };
   
-  // Handle file input change
+  // Обновляем handleFileInputChange для автоматического сохранения
   const handleFileInputChange = async (e) => {
     if (isReadOnly) return;
     
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
     
-    // Получаем информацию о проекте
     const projectName = projectId || 'unnamed';
     const currentDate = data.date || new Date().toISOString().split('T')[0];
     const baseIndex = data.images.length;
@@ -312,7 +362,6 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
       formData.append('file', file);
     });
     
-    // Добавляем информацию о проекте и дне
     formData.append('projectName', projectName);
     formData.append('date', currentDate);
     formData.append('dayIndex', index);
@@ -330,16 +379,18 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
       
       const result = await response.json();
       
+      const newImages = [...data.images, ...result.urls];
+      setImages(newImages);
       onUpdate(index, {
         ...data,
-        images: [...data.images, ...result.urls]
+        images: newImages,
+        lastModified: new Date().toISOString()
       });
       
-      // Сбросить значение input для возможности повторной загрузки тех же файлов
       e.target.value = null;
     } catch (error) {
       console.error('Error uploading files:', error);
-      alert('Failed to upload images. Please try again.');
+      toast.error('Ошибка при загрузке изображений');
     }
   };
 
@@ -349,17 +400,25 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
     fileInputRef.current.click();
   };
 
-  // Handle delete image
-  const handleDeleteImage = (imgIndex) => {
+  // Обновляем handleDeleteImage для автоматического сохранения
+  const handleDeleteImage = async (imageUrl) => {
     if (isReadOnly) return;
     
-    const newImages = [...data.images];
-    newImages.splice(imgIndex, 1);
+    const newImages = images.filter(img => img !== imageUrl);
+    setImages(newImages);
     
-    onUpdate(index, {
+    // Сохраняем изменения
+    const updatedData = {
       ...data,
-      images: newImages
-    });
+      images: newImages,
+      socialNetwork,
+      contentType,
+      text,
+      lastModified: new Date().toISOString(),
+      lastModifiedBy: session?.user?.id || 'unknown'
+    };
+    
+    await onUpdate(index, updatedData);
   };
 
   // Open file dialog
@@ -371,7 +430,9 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
   
   // Handle drag over
   const handleDragOver = (e) => {
+    if (isReadOnly || isDayLocked) return;
     e.preventDefault();
+    setIsDraggingOver(true);
   };
   
   // Upload image to server
@@ -457,7 +518,7 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
         });
         
         await navigator.clipboard.write([item]);
-        alert('Image copied to clipboard');
+        toast.success('Успешно скопировано');
         return;
       }
       
@@ -526,7 +587,7 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
       });
       
       await navigator.clipboard.write([item]);
-      alert('All images combined and copied to clipboard');
+      toast.success('Успешно скопировано');
     } catch (error) {
       console.error('Error copying images to clipboard:', error);
       
@@ -534,10 +595,10 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
       try {
         const imageUrls = data.images.join('\n');
         await navigator.clipboard.writeText(imageUrls);
-        alert('Could not copy images directly. Image URLs copied to clipboard instead.');
+        toast.success('Успешно скопировано');
       } catch (fallbackError) {
         console.error('Fallback error:', fallbackError);
-        alert('Failed to copy images. Please try again or right-click and copy the images manually.');
+        toast.error('Ошибка при копировании');
       }
     }
   };
@@ -556,7 +617,7 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
       });
       
       await navigator.clipboard.write([item]);
-      alert('Image copied to clipboard');
+      toast.success('Успешно скопировано');
     } catch (error) {
       console.error('Error copying image to clipboard:', error);
       
@@ -564,10 +625,10 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
       try {
         const imageUrl = data.images[imageIndex];
         await navigator.clipboard.writeText(imageUrl);
-        alert('Could not copy image directly. Image URL copied to clipboard instead.');
+        toast.success('Успешно скопировано');
       } catch (fallbackError) {
         console.error('Fallback error:', fallbackError);
-        alert('Failed to copy image. Please try again or right-click and copy the image manually.');
+        toast.error('Ошибка при копировании');
       }
     }
   };
@@ -576,9 +637,10 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
   const copyTextToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(data.text);
-      alert('Text copied to clipboard');
+      toast.success('Успешно скопировано');
     } catch (error) {
       console.error('Error copying text:', error);
+      toast.error('Ошибка при копировании');
     }
   };
   
@@ -626,21 +688,21 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
             })
           ]);
           
-          alert('День скопирован в буфер обмена (с изображением)');
+          toast.success('Успешно скопировано');
         } catch (imageError) {
           console.error('Error copying image:', imageError);
           // Если не удалось скопировать изображение, копируем только текст
           await navigator.clipboard.writeText(textContent);
-          alert('День скопирован в буфер обмена (без изображения)');
+          toast.success('Успешно скопировано');
         }
       } else {
         // Если нет изображений, копируем только текст
         await navigator.clipboard.writeText(textContent);
-        alert('День скопирован в буфер обмена');
+        toast.success('Успешно скопировано');
       }
     } catch (error) {
       console.error('Error copying day content:', error);
-      alert('Не удалось скопировать день. Пожалуйста, попробуйте еще раз.');
+      toast.error('Ошибка при копировании');
     }
   };
   
@@ -816,7 +878,7 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
     });
   };
 
-  // Обновление исходной колонки при перетаскивании
+  // Обновляем исходной колонки при перетаскивании
   const updateSourceColumn = (imageIndex) => {
     if (isReadOnly) return;
     
@@ -837,7 +899,7 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
     }
   };
 
-  // Move image in the array (swap images)
+  // Обновляем функцию moveImage для автоматического сохранения
   const moveImage = (fromIndex, toIndex) => {
     if (isReadOnly) return;
     
@@ -845,16 +907,16 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
     const [movedImage] = newImages.splice(fromIndex, 1);
     newImages.splice(toIndex, 0, movedImage);
     
-    // Обновляем состояние
+    // Обновляем состояние и сохраняем
+    setImages(newImages);
     onUpdate(index, {
       ...data,
-      images: newImages
+      images: newImages,
+      lastModified: new Date().toISOString()
     });
     
-    // Отправляем событие об изменении порядка изображений через Socket.IO
-    if (socket && projectId) {
-      socket.emitImageReorder(data.id, newImages);
-    }
+    // Отправляем событие об изменении порядка изображений
+    emitImageReorder(newImages);
   };
 
   // Render image grid
@@ -919,7 +981,7 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
                 className="delete-image-button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteImage(idx);
+                  handleDeleteImage(image);
                 }}
                 title="Удалить изображение"
               >
@@ -989,19 +1051,19 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
         console.log('Промт скопирован в буфер обмена');
         
         // Уведомляем пользователя
-        alert('Промт скопирован в буфер обмена');
+        toast.success('Промпт скопирован');
         
         // Открываем ChatGPT в новом окне
         console.log('Открываем ChatGPT');
         window.open('https://chat.openai.com/', '_blank');
       } catch (clipboardError) {
         console.error('Ошибка при копировании в буфер обмена:', clipboardError);
-        alert('Не удалось скопировать промт в буфер обмена. Пожалуйста, скопируйте вручную: ' + prompt);
+        toast.error('Не удалось скопировать промпт в буфер обмена');
         window.open('https://chat.openai.com/', '_blank');
       }
     } catch (error) {
       console.error('Error generating image:', error);
-      alert('Произошла ошибка при генерации изображения');
+      toast.error('Произошла ошибка при генерации изображения');
     }
   };
 
@@ -1029,7 +1091,6 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
                 disabled={isReadOnly}
               >
                 <span className="image-tool-icon">+</span>
-                <span className="image-tool-text">Загрузить</span>
               </button>
               
               <button 
@@ -1047,7 +1108,6 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
                     <path fill="#A259FF" d="M0 28.5A9.5 9.5 0 0 0 9.5 38H19V19H9.5A9.5 9.5 0 0 0 0 28.5z"/>
                   </svg>
                 </span>
-                <span className="image-tool-text">Figma</span>
               </button>
               
               <button 
@@ -1061,7 +1121,6 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
                     <path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.5093-2.6067-1.4997z"/>
                   </svg>
                 </span>
-                <span className="image-tool-text">Сгенерировать</span>
               </button>
             </div>
           </div>
@@ -1186,43 +1245,168 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
     }
   };
   
+  // Функция для копирования ссылки на демонстрацию
+  const handleCopyPrompt = async () => {
+    try {
+      // Формируем URL демонстрации
+      const demoUrl = `${window.location.origin}/projects/${projectId}/demo`;
+      
+      // Копируем URL в буфер обмена
+      await navigator.clipboard.writeText(demoUrl);
+      
+      // Показываем уведомление об успехе
+      toast.success('Ссылка скопирована');
+      
+      // Открываем демо в новом окне
+      window.open(demoUrl, '_blank');
+    } catch (error) {
+      console.error('Error copying demo link:', error);
+      toast.error('Ошибка при копировании ссылки');
+    }
+  };
+
+  // Функция для сохранения изменений
+  const handleSave = async () => {
+    try {
+      const updatedDay = {
+        ...data,
+        text,
+        images,
+        socialNetwork,
+        contentType,
+        lastModified: new Date().toISOString()
+      };
+
+      onUpdate(updatedDay);
+      setIsEditing(false);
+      toast.success('Изменения сохранены');
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      toast.error('Не удалось сохранить изменения');
+    }
+  };
+
+  // Функция для отмены изменений
+  const handleCancel = () => {
+    setText(data.text || '');
+    setImages(data.images || []);
+    setSocialNetwork(data.socialNetwork || 'Telegram');
+    setContentType(data.contentType || 'Пост');
+    setIsEditing(false);
+    toast('Редактирование отменено', { icon: '⚠️' });
+  };
+
+  // Функция для удаления дня
+  const handleDeleteDay = async () => {
+    try {
+      if (onDelete) {
+        const result = await onDelete(index);
+        if (result?.success) {
+          toast.success('День успешно удален');
+        } else {
+          toast.error('Ошибка при удалении дня');
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting day:', error);
+      toast.error('Ошибка при удалении дня');
+    }
+  };
+  
   // Рендер заголовка колонки с датой
   const renderColumnHeader = () => {
     return (
-      <div className="column-header border-b relative">
-        <div className="column-number">{index + 1}</div>
-        {isEditingDate && !isReadOnly ? (
+      <div className="column-header flex justify-between items-center p-2 bg-gray-50 border-b">
+        <div className="flex items-center space-x-2">
+          {isEditingDate ? (
           <div className="date-input-container">
             <input
               ref={dateInputRef}
               type="date"
-              className="date-input"
+                className="date-input px-2 py-1 border rounded hover:border-blue-500 focus:border-blue-500 focus:outline-none"
               value={dateInputValue}
               onChange={(e) => setDateInputValue(e.target.value)}
-              onBlur={saveDate}
-              onKeyDown={handleDateKeyDown}
+                onBlur={handleDateInputBlur}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleDateInputBlur();
+                  } else if (e.key === 'Escape') {
+                    setIsEditingDate(false);
+                    setDateInputValue(data.date);
+                  }
+                }}
             />
           </div>
         ) : (
-          <div 
-            className={`date-display ${!isReadOnly ? 'cursor-pointer' : ''}`}
-            onClick={!isReadOnly ? startEditingDate : undefined}
-          >
-            <span>{formatDate(data.date)}</span>
-            {!isReadOnly && <span className="ml-auto">▼</span>}
-          </div>
-        )}
-        
-        {/* Кнопка удаления дня */}
-        {isHovered && !isReadOnly && onDelete && (
+            <button
+              onClick={() => !isReadOnly && setIsEditingDate(true)}
+              className={`date-display px-2 py-1 rounded ${
+                !isReadOnly ? 'hover:bg-gray-200 cursor-pointer' : 'cursor-default'
+              } transition-colors duration-200`}
+              title={isReadOnly ? undefined : "Нажмите для изменения даты"}
+              disabled={isReadOnly}
+            >
+              {formatDate(data.date)}
+            </button>
+          )}
+          
+          <div className="flex items-center space-x-2">
           <button 
-            className="delete-day-button"
-            onClick={() => onDelete(index)}
+              className={`social-network-select px-2 py-1 rounded ${
+                !isReadOnly ? 'hover:bg-gray-200 cursor-pointer' : 'cursor-default'
+              } transition-colors duration-200`}
+              onClick={() => {
+                if (!isReadOnly) {
+                  const networks = ['Telegram', 'Instagram', 'VK'];
+                  const currentIndex = networks.indexOf(socialNetwork);
+                  const nextIndex = (currentIndex + 1) % networks.length;
+                  setSocialNetwork(networks[nextIndex]);
+                }
+              }}
+              title={isReadOnly ? undefined : "Нажмите для смены соц. сети"}
+              disabled={isReadOnly}
+            >
+              {socialNetwork === 'Telegram' && <FaTelegram className="text-[#0088cc]" />}
+              {socialNetwork === 'Instagram' && <FaInstagram className="text-[#E1306C]" />}
+              {socialNetwork === 'VK' && <FaVk className="text-[#4C75A3]" />}
+            </button>
+
+            <button
+              className={`content-type-select px-2 py-1 rounded ${
+                !isReadOnly ? 'hover:bg-gray-200 cursor-pointer' : 'cursor-default'
+              } transition-colors duration-200 text-sm`}
+              onClick={() => {
+                if (!isReadOnly) {
+                  const types = ['Пост', 'Сторис', 'Рилс'];
+                  const currentIndex = types.indexOf(contentType);
+                  const nextIndex = (currentIndex + 1) % types.length;
+                  setContentType(types[nextIndex]);
+                }
+              }}
+              title={isReadOnly ? undefined : "Нажмите для смены типа контента"}
+              disabled={isReadOnly}
+            >
+              {contentType}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          {!isReadOnly && (
+            <button
+              onClick={handleDeleteDay}
+              className="delete-button p-1 rounded hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors duration-200"
             title="Удалить день"
           >
-            <FaTrash />
+              <FaTrash size={14} />
           </button>
         )}
+          {isDayLocked && (
+            <div className="locked-indicator flex items-center text-yellow-500" title={`Редактируется пользователем ${getDayEditor(index)?.name}`}>
+              <FaLock size={14} />
+            </div>
+          )}
+        </div>
       </div>
     );
   };
@@ -1249,403 +1433,98 @@ export default function DayColumn({ day, index, data, onUpdate, isReadOnly, onDe
   return (
     <div 
       ref={columnRef}
-      className={`day-column ${isActive ? 'active' : 'empty'} ${isDraggingOver ? 'drop-target' : ''} ${
-        isDayLocked ? 'day-column-locked' : ''
-      } ${isEditingByCurrentUser ? 'day-column-active' : ''}`}
-      style={{
-        ...(isEditingByCurrentUser && dayEditor ? { boxShadowColor: dayEditor.color } : {})
-      }}
-      data-column-index={index}
+      className={`day-column relative ${isActive ? 'active' : ''} ${isDraggingOver ? 'dragging-over' : ''}`}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onClick={isActive ? undefined : handleCreateContent}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={handleColumnClick}
     >
-      {/* Шильдик с именем пользователя, если день редактируется */}
-      {dayEditor && (
-        <div 
-          className="user-badge" 
-          style={{ backgroundColor: dayEditor.color }}
-          title={`Редактируется пользователем: ${dayEditor.username}`}
-        >
-          {dayEditor.username}
-        </div>
-      )}
-      
       {renderColumnHeader()}
       
-      {/* Social Network Selector with Copy Day Button */}
-      <div className="social-network-selector flex justify-between items-center">
-        <div className="flex items-center flex-wrap">
-          <div ref={socialNetworkRef} className="relative mb-2 mr-2 flex items-center">
-            {isReadOnly ? (
-              <div className="social-network-display flex items-center">
-                <span className="social-network-icon mr-2">
-                  {renderSocialNetworkIcon()}
-                </span>
-                <span className="social-network-name">
-                  {data.socialNetwork || 'Не выбрана'}
-                </span>
-              </div>
-            ) : (
-              <button 
-                className="social-network-dropdown-button flex items-center"
-                onClick={() => setShowSocialNetworkDropdown(!showSocialNetworkDropdown)}
-              >
-                <span className="social-network-icon mr-2">
-                  {renderSocialNetworkIcon()}
-                </span>
-                <span className="social-network-name">
-                  {data.socialNetwork || 'Выберите социальную сеть'}
-                </span>
-                <span className="ml-auto">▼</span>
-              </button>
-            )}
-            
-            {showSocialNetworkDropdown && !isReadOnly && (
-              <div className="social-network-dropdown">
-                {socialNetworks.map(network => (
-                  <button 
-                    key={network} 
-                    className="social-network-dropdown-item"
-                    onClick={() => handleSocialNetworkChange({ target: { value: network } })}
-                  >
-                    <span className="social-network-icon mr-2">
-                      {socialNetworkIcons[network]}
-                    </span>
-                    <span className="social-network-name">
-                      {network}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          <div ref={contentTypeRef} className="relative mb-2 mr-2 flex items-center">
-            {isReadOnly ? (
-              <div className="content-type-display flex items-center">
-                <span className="content-type-icon mr-2">
-                  {renderContentTypeIcon()}
-                </span>
-                <span className="content-type-name">
-                  {data.contentType || 'Не выбран'}
-                </span>
-              </div>
-            ) : (
-              <button 
-                className="content-type-dropdown-button flex items-center"
-                onClick={() => setShowContentTypeDropdown(!showContentTypeDropdown)}
-              >
-                <span className="content-type-icon mr-2">
-                  {renderContentTypeIcon()}
-                </span>
-                <span className="content-type-name">
-                  {data.contentType || 'Выберите тип контента'}
-                </span>
-                <span className="ml-auto">▼</span>
-              </button>
-            )}
-            
-            {showContentTypeDropdown && !isReadOnly && (
-              <div className="content-type-dropdown">
-                {contentTypes.map(type => (
-                  <button 
-                    key={type} 
-                    className="content-type-dropdown-item"
-                    onClick={() => handleContentTypeChange({ target: { value: type } })}
-                  >
-                    <span className="content-type-icon mr-2">
-                      {contentTypeIcons[type]}
-                    </span>
-                    <span className="content-type-name">
-                      {type}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Кнопка "Скопировать день" перемещена в правый верхний угол */}
-        <div className="flex justify-between items-center">
-          <div className="flex items-center flex-wrap">
-          </div>
-          <button 
-            className={`copy-day-button ${isReadOnly ? 'copy-button-demo' : ''}`}
-            onClick={copyEntireDayContent}
-            title="Копировать весь день"
-          >
-            {isReadOnly ? (
-              <>
-                <FaCopy />
-                <span className="ml-1">Скопировать день</span>
-              </>
-            ) : (
-              <FaCopy />
-            )}
-          </button>
-        </div>
-      </div>
-      
-      {/* Image Area */}
-      <div className="image-area">
+      <div className="day-content">
+        {isActive ? (
+          <>
+            {/* Область для изображений */}
         {renderImageUpload()}
-      </div>
-      
-      {/* Text Area - скрываем, если выбран тип "Сторис" */}
-      {(!data.contentType || data.contentType !== 'Сторис') && (
-        <div className="text-area p-2 relative">
-          {isReadOnly ? (
-            // В режиме демонстрации показываем только текст с форматированием и кнопку копирования
-            <>
-              {/* Панель управления текстом в режиме демонстрации */}
-              <div id="post-text-functions" className="chatgpt-button-container flex items-center justify-end mb-2">
-                <button
-                  className="chatgpt-button flex items-center px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm"
-                  onClick={copyTextToClipboard}
-                  title="Скопировать текст в буфер обмена"
-                >
-                  <FaCopy className="mr-1" />
-                  <span>Копировать</span>
-                </button>
-              </div>
-              <div className="quill-content">
-                <div 
-                  className="ql-editor" 
-                  dangerouslySetInnerHTML={{ __html: data.text || '' }}
-                />
-              </div>
-            </>
-          ) : (
-            // В обычном режиме показываем редактор
-            <>
-              {/* Панель управления текстом над редактором */}
+            
+            {/* Текстовый редактор */}
+            <div className="post-text-editor mb-4">
+              {/* Показываем панель инструментов только если это не демо-режим */}
+              {!isReadOnly && (
               <div id="post-text-functions" className="chatgpt-button-container flex items-center justify-between mb-2">
+                  <div className="flex space-x-2">
                 <button
                   className="chatgpt-button flex items-center px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm"
                   onClick={() => setShowChatGptModal(true)}
                   title="Улучшить текст с помощью ChatGPT"
                 >
-                  <FaRobot className="mr-1" />
-                  <span>ChatGPT</span>
+                      <FaRobot />
                 </button>
                 <button
                   className="chatgpt-button flex items-center px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm"
                   onClick={copyTextToClipboard}
                   title="Скопировать текст в буфер обмена"
                 >
-                  <FaCopy className="mr-1" />
-                  <span>Копировать</span>
+                      <FaCopy />
                 </button>
               </div>
-              
-              <ReactQuill
-                value={data.text || ''}
-                onChange={handleTextChange}
-                modules={quillModules}
-                formats={quillFormats}
-                className="quill-editor"
-                placeholder="Введите текст публикации здесь..."
-                readOnly={isReadOnly}
-              />
-            </>
-          )}
+                  <button
+                    className="chatgpt-button flex items-center px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm"
+                    onClick={handleCopyPrompt}
+                    title="Скопировать ссылку на демонстрацию"
+                  >
+                    <FaGlobe />
+                  </button>
         </div>
       )}
       
-      {/* Модальное окно ChatGPT */}
-      {showChatGptModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium mb-4 flex items-center">
-              <FaRobot className="mr-2" /> Улучшить текст с помощью ChatGPT
-            </h3>
-            
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              handleChatGptSubmit(e);
-            }}>
-              <div className="mb-4">
-                <label htmlFor="chatgpt-prompt" className="block mb-2 text-sm font-medium">
-                  Введите инструкции для улучшения текста:
-                </label>
-                <textarea
-                  id="chatgpt-prompt"
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  rows="4"
-                  value={chatGptPrompt}
-                  onChange={(e) => setChatGptPrompt(e.target.value)}
-                  placeholder="Например: Сделай текст более убедительным, исправь ошибки, добавь эмодзи..."
-                  disabled={isProcessingChatGpt}
+              <div className="relative">
+                <QuillWrapper
+                  value={text}
+                  onChange={handleTextChange}
+                  readOnly={isReadOnly || isDayLocked}
+                  placeholder="Введите текст поста..."
                 />
               </div>
+              </div>
               
-              <div className="flex justify-end space-x-2">
+            {/* Кнопки управления */}
+            <div className="flex justify-between mt-4">
+              <div className="flex space-x-2">
                 <button
-                  type="button"
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                  onClick={() => {
-                    setShowChatGptModal(false);
-                    setChatGptPrompt('');
-                  }}
-                  disabled={isProcessingChatGpt}
+                  onClick={handleSave}
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center"
+                  disabled={isReadOnly || isDayLocked}
                 >
+                  <FaSave className="mr-2" />
+                  Сохранить
+                </button>
+                <button
+                  onClick={handleCancel}
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 flex items-center"
+                >
+                  <FaTimes className="mr-2" />
                   Отмена
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  disabled={isProcessingChatGpt}
-                >
-                  {isProcessingChatGpt ? 'Обработка...' : 'Применить'}
-                </button>
               </div>
-            </form>
+            </div>
+          </>
+        ) : (
+          <div
+            className="empty-day-content"
+            onClick={handleCreateContent}
+            onDragOver={handleEmptyAreaDragOver}
+            onDragLeave={handleEmptyAreaDragLeave}
+            onDrop={handleEmptyAreaDrop}
+          >
+            <div className="flex flex-col items-center justify-center h-full">
+              <FaPlus className="text-3xl mb-2" />
+              <span>Создать контент</span>
           </div>
         </div>
       )}
+      </div>
     </div>
   );
-
-  // Обработчик клика по колонке
-  const handleColumnClick = () => {
-    if (isReadOnly) return;
-    
-    // Если день заблокирован другим пользователем, ничего не делаем
-    if (isDayLocked) return;
-    
-    // Если пользователь уже редактирует этот день, ничего не делаем
-    if (isEditingByCurrentUser) return;
-    
-    // Если пользователь редактирует другой день, сначала освобождаем его
-    if (activeUsers?.currentUser?.activeDay && activeUsers.currentUser.activeDay !== day.id) {
-      activeUsers.releaseDay();
-    }
-    
-    // Устанавливаем этот день как активный для текущего пользователя
-    if (activeUsers?.updateUserStatus) {
-      activeUsers.updateUserStatus(day.id);
-    }
-    
-    setIsActive(true);
-  };
-
-  // Обработка запроса к ChatGPT
-  const handleChatGptSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!chatGptPrompt.trim()) {
-      alert('Пожалуйста, введите запрос для ChatGPT');
-      return;
-    }
-    
-    setIsProcessingChatGpt(true);
-    
-    try {
-      const response = await fetch('/api/chatgpt', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: chatGptPrompt,
-          text: data.text || ''
-        })
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        // Обновляем текст в редакторе
-        handleTextChange(result.result);
-        setShowChatGptModal(false);
-        setChatGptPrompt('');
-      } else {
-        throw new Error(result.message || 'Ошибка при обработке запроса');
-      }
-    } catch (error) {
-      console.error('Error processing ChatGPT request:', error);
-      alert('Произошла ошибка при обработке запроса. Пожалуйста, попробуйте еще раз.');
-    } finally {
-      setIsProcessingChatGpt(false);
-    }
-  };
-
-  // Функция для создания уникальной копии URL изображения
-  const createUniqueImageUrl = (originalUrl) => {
-    // Добавляем уникальный идентификатор к URL изображения
-    // Формат: оригинальный_URL?dayId=ID_дня&timestamp=текущее_время
-    const separator = originalUrl.includes('?') ? '&' : '?';
-    return `${originalUrl}${separator}dayId=${index}&timestamp=${Date.now()}&random=${Math.floor(Math.random() * 10000)}`;
-  };
-
-  // Регистрируем глобальную функцию для обновления исходной колонки
-  useEffect(() => {
-    // Регистрируем функцию обновления исходной колонки
-    if (!window.updateSourceColumn) {
-      window.updateSourceColumn = (columnIndex, imageIndex) => {
-        console.log('Updating source column', { columnIndex, imageIndex });
-        
-        // Находим все колонки
-        const allColumns = document.querySelectorAll('.day-column');
-        console.log('Found columns:', allColumns.length);
-        
-        // Ищем колонку с нужным индексом
-        const sourceColumn = Array.from(allColumns).find(
-          col => col.dataset.columnIndex === columnIndex.toString()
-        );
-        
-        if (sourceColumn) {
-          console.log('Found source column:', sourceColumn);
-          
-          // Создаем и отправляем событие для обновления колонки
-          const event = new CustomEvent('updateColumn', { 
-            detail: { columnIndex, imageIndex } 
-          });
-          sourceColumn.dispatchEvent(event);
-        } else {
-          console.error('Source column not found:', columnIndex);
-        }
-      };
-    }
-    
-    // Добавляем обработчик события для обновления колонки
-    const columnElement = document.querySelector(`.day-column[data-column-index="${index}"]`);
-    if (columnElement) {
-      const handleUpdateColumn = (e) => {
-        const { columnIndex, imageIndex } = e.detail;
-        console.log('Received updateColumn event', { columnIndex, imageIndex, myIndex: index });
-        
-        if (parseInt(columnIndex) === parseInt(index)) {
-          console.log('Updating column', index, 'removing image at index', imageIndex);
-          updateSourceColumn(imageIndex);
-        }
-      };
-      
-      columnElement.addEventListener('updateColumn', handleUpdateColumn);
-      
-      // Очистка при размонтировании
-      return () => {
-        columnElement.removeEventListener('updateColumn', handleUpdateColumn);
-      };
-    }
-  }, [index, data.images, onUpdate, isReadOnly]);
-
-  // Сохраняем ссылку на Socket.IO в глобальном объекте window
-  useEffect(() => {
-    // Проверяем, есть ли socket в props
-    if (window.socketIO) return;
-    
-    // Получаем socket из родительского компонента через window
-    const socketInterval = setInterval(() => {
-      if (window.socketIO) {
-        clearInterval(socketInterval);
-      }
-    }, 100);
-    
-    return () => {
-      clearInterval(socketInterval);
-    };
-  }, []);
 }

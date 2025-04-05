@@ -1,0 +1,19 @@
+{
+  "projectId": "project-1743541168793",
+  "name": "Agarto test",
+  "owner": "test-user-123",
+  "users": [
+    {
+      "userId": "test-user-123",
+      "role": "owner",
+      "username": "123"
+    },
+    {
+      "userId": "test-user-222",
+      "role": "editor",
+      "username": "222"
+    }
+  ],
+  "createdAt": "2024-03-20T10:00:00.000Z",
+  "updatedAt": "2025-04-03T13:51:49.814Z"
+}

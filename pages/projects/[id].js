@@ -9,19 +9,20 @@ import { FaEdit, FaTrash, FaShareAlt, FaEye, FaFileDownload, FaUsers } from 'rea
 import Head from 'next/head';
 import useActiveUsers from '../../hooks/useActiveUsers';
 import useSocketIO from '../../hooks/useSocketIO';
+import { toast } from 'react-hot-toast';
+import Calendar from '../../components/Calendar';
 
 export default function ProjectDetail() {
   const router = useRouter();
-  const { id, demo } = router.query;
+  const { id } = router.query;
   const { data: session, status } = useSession();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const projectNameInputRef = useRef(null);
-  const [demoMode, setDemoMode] = useState(false);
-  const [demoLink, setDemoLink] = useState('');
+  const demoMode = router.query.demo === 'true';
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showActiveUsers, setShowActiveUsers] = useState(false);
 
@@ -29,7 +30,7 @@ export default function ProjectDetail() {
   const activeUsers = useActiveUsers(id);
   
   // Используем хук для работы с Socket.IO
-  const socket = useSocketIO(id);
+  const { socket, isConnected } = useSocketIO(id);
 
   // Сохраняем ссылку на Socket.IO в глобальном объекте window
   useEffect(() => {
@@ -45,143 +46,97 @@ export default function ProjectDetail() {
     };
   }, [socket]);
 
-  // Функция для создания пустого дня
-  const createEmptyDay = (index) => {
-    const today = new Date();
-    const date = new Date(today);
-    date.setDate(today.getDate() + index);
-    
-    return {
-      date: date.toISOString().split('T')[0],
-      socialNetwork: 'Telegram',
-      contentType: 'Пост',
-      images: [],
-      text: ''
-    };
-  };
-
-  // Редирект на страницу логина, если пользователь не авторизован и не в режиме демонстрации
+  // Redirect to login if not authenticated and not in demo mode
   useEffect(() => {
-    // Если страница загружается и параметры еще не доступны, ничего не делаем
-    if (!router.isReady) return;
-    
-    // Проверяем, является ли это режимом демонстрации
-    const isDemoMode = router.query.demo === 'true';
-    
-    // Если не в режиме демонстрации и пользователь не авторизован, перенаправляем на страницу входа
-    if (!isDemoMode && status === 'unauthenticated') {
+    if (!demoMode && status === 'unauthenticated') {
       router.push('/login');
     }
-  }, [router.isReady, router.query, status, router]);
+  }, [status, router, demoMode]);
 
   // Загрузка данных проекта
   useEffect(() => {
     if (!id || !router.isReady) return;
     
-    // Устанавливаем режим демонстрации, если указан параметр demo
-    const isDemoMode = router.query.demo === 'true';
-    setDemoMode(isDemoMode);
-    
-    // Формируем демо-ссылку для проекта
-    const baseUrl = window.location.origin;
-    setDemoLink(`${baseUrl}/projects/${id}?demo=true`);
-    
     const fetchProject = async () => {
       try {
         // Добавляем параметр demo в запрос, если активен режим демонстрации
-        const url = isDemoMode ? `/api/projects/${id}?demo=true` : `/api/projects/${id}`;
-        console.log('Fetching project from URL:', url);
-        console.log('Current session:', session);
-        
+        const url = demoMode ? `/api/projects/${id}?demo=true` : `/api/projects/${id}`;
         const response = await fetch(url);
         
         if (!response.ok) {
-          console.error('Response not OK:', response.status, response.statusText);
-          const errorData = await response.json().catch(() => ({}));
-          console.error('Error response data:', errorData);
           throw new Error('Failed to fetch project');
         }
         
         const data = await response.json();
-        console.log('Project data received:', data);
         
         if (data.success) {
-          // Получаем проект из ответа API
-          const projectData = data.data || data.project;
-          
-          if (!projectData) {
-            console.error('Invalid project data:', data);
-            setError('Invalid project data received from server');
-            setLoading(false);
-            return;
-          }
-          
-          // Проверяем, есть ли у проекта дни, если нет - создаем 7 пустых дней
-          if (!projectData.days || !Array.isArray(projectData.days) || projectData.days.length === 0) {
-            projectData.days = Array.from({ length: 7 }, (_, i) => createEmptyDay(i));
-          }
-          
-          // Проверяем, есть ли у каждого дня поле date, если нет - добавляем его
-          // Также добавляем уникальный ID для каждого дня, если его нет
-          projectData.days = projectData.days.map((day, index) => {
-            if (!day) {
-              return {
-                ...createEmptyDay(index),
-                id: `day-${index}-${Date.now()}-${Math.floor(Math.random() * 10000)}`
-              };
-            }
-            
-            // Добавляем уникальный ID для дня, если его нет
-            if (!day.id) {
-              day.id = `day-${index}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-            }
-            
-            if (!day.date) {
-              const today = new Date();
-              const date = new Date(today);
-              date.setDate(today.getDate() + index);
-              return {
-                ...day,
-                date: date.toISOString().split('T')[0]
-              };
-            }
-            
-            // Убедимся, что у каждого дня есть массив изображений
-            if (!day.images) {
-              day.images = [];
-            }
-            
-            // Добавляем параметр dayId к каждому URL изображения, чтобы сделать его уникальным для этого дня
-            if (day.images && Array.isArray(day.images)) {
-              day.images = day.images.map(img => {
-                // Проверяем, содержит ли URL уже параметр dayId
-                if (img.includes(`dayId=${day.id}`)) {
-                  return img;
-                }
-                
-                // Добавляем параметр dayId к URL
-                const separator = img.includes('?') ? '&' : '?';
-                return `${img}${separator}dayId=${day.id}`;
-              });
-            }
-            
-            return day;
-          });
-          
-          setProject(projectData);
+          setProject(data.data);
         } else {
-          setError(data.message || 'Failed to load project');
+          throw new Error(data.message || 'Failed to load project');
         }
       } catch (error) {
         console.error('Error fetching project:', error);
-        setError('Failed to load project');
+        setError(error.message || 'Failed to load project');
       } finally {
         setLoading(false);
       }
     };
     
     fetchProject();
-  }, [id, router.isReady, router.query, status]);
+  }, [id, router.isReady, demoMode]);
+
+  // Обработка изменений в проекте через Socket.IO
+  useEffect(() => {
+    if (!socket || !isConnected || !project?.id) return;
+
+    const handleProjectUpdate = (updatedProject) => {
+      if (updatedProject.id === project.id) {
+        setProject(prev => ({
+          ...prev,
+          ...updatedProject,
+          days: updatedProject.days.map((day, index) => ({
+            ...day,
+            id: day.id || `day-${index}-${Date.now()}-${Math.floor(Math.random() * 10000)}`
+          }))
+        }));
+      }
+    };
+
+    socket.on('projectUpdate', handleProjectUpdate);
+    return () => socket.off('projectUpdate', handleProjectUpdate);
+  }, [socket, isConnected, project?.id]);
+
+  // Обработка изменений в активных пользователях
+  useEffect(() => {
+    if (!socket || !isConnected || !project?.id) return;
+
+    const handleActiveUsersUpdate = (users) => {
+      if (activeUsers?.setActiveUsers) {
+        activeUsers.setActiveUsers(users);
+      }
+    };
+
+    socket.on('activeUsersUpdate', handleActiveUsersUpdate);
+    return () => socket.off('activeUsersUpdate', handleActiveUsersUpdate);
+  }, [socket, isConnected, project?.id, activeUsers]);
+
+  // Обработка изменений в днях
+  useEffect(() => {
+    if (!socket || !isConnected || !project?.id) return;
+
+    const handleDaysUpdate = (updatedDays) => {
+      setProject(prev => ({
+        ...prev,
+        days: updatedDays.map((day, index) => ({
+          ...day,
+          id: day.id || `day-${index}-${Date.now()}-${Math.floor(Math.random() * 10000)}`
+        }))
+      }));
+    };
+
+    socket.on('daysUpdate', handleDaysUpdate);
+    return () => socket.off('daysUpdate', handleDaysUpdate);
+  }, [socket, isConnected, project?.id]);
 
   // Обновление данных дня
   const handleDayUpdate = async (index, updatedDay) => {
@@ -220,9 +175,9 @@ export default function ProjectDetail() {
 
   // Обработчик событий реального времени для обновления изображений
   useEffect(() => {
-    if (!socket || !project) return;
+    if (!socket || !project || !isConnected) return;
     
-    const unsubscribe = socket.subscribeToImageReorder(({ dayId, images, userId }) => {
+    const handleImageReorder = ({ dayId, images, userId }) => {
       // Игнорируем события от текущего пользователя
       if (userId === session?.user?.id) return;
       
@@ -244,10 +199,14 @@ export default function ProjectDetail() {
         ...project,
         days: updatedDays
       });
-    });
+    };
     
-    return unsubscribe;
-  }, [socket, project, session]);
+    socket.on('imageReorder', handleImageReorder);
+    
+    return () => {
+      socket.off('imageReorder', handleImageReorder);
+    };
+  }, [socket, project, session, isConnected]);
 
   // Функция для удаления дня
   const handleDeleteDay = async (dayIndex) => {
@@ -340,40 +299,43 @@ export default function ProjectDetail() {
     }
     
     try {
-      const response = await fetch(`/api/projects/${id}`, {
+      const response = await fetch(`/api/projects/${id}/update-info`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          ...project,
-          name: newProjectName.trim()
+          companyName: newProjectName.trim()
         })
       });
       
       const result = await response.json();
       
       if (result.success) {
-        // Обновляем локальное состояние
         setProject({
           ...project,
-          name: newProjectName.trim()
+          name: newProjectName.trim(),
+          clientInfo: {
+            ...project.clientInfo,
+            companyName: newProjectName.trim()
+          }
         });
         setIsEditingName(false);
+        toast.success('Название проекта обновлено');
       } else {
-        setError('Failed to rename project');
+        toast.error('Не удалось обновить название проекта');
       }
     } catch (error) {
       console.error('Error renaming project:', error);
-      setError('Failed to rename project');
+      toast.error('Не удалось обновить название проекта');
     }
   };
 
   // Начать редактирование названия проекта
   const startEditingName = () => {
+    if (demoMode) return;
     setNewProjectName(project.name);
     setIsEditingName(true);
-    // Фокус на поле ввода после рендеринга
     setTimeout(() => {
       if (projectNameInputRef.current) {
         projectNameInputRef.current.focus();
@@ -391,14 +353,36 @@ export default function ProjectDetail() {
   };
 
   // Обработчик обновления информации в боковой панели
-  const handleProjectInfoUpdate = (updatedInfo) => {
-    if (!project) return;
+  const handleProjectInfoUpdate = async (updatedInfo) => {
+    if (!project || demoMode) return;
     
-    // Обновляем локальное состояние проекта
-    setProject({
-      ...project,
-      ...updatedInfo
-    });
+    try {
+      const response = await fetch(`/api/projects/${id}/update-info`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedInfo)
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setProject({
+          ...project,
+          clientInfo: {
+            ...project.clientInfo,
+            ...updatedInfo
+          }
+        });
+        toast.success('Информация о проекте обновлена');
+      } else {
+        toast.error('Не удалось обновить информацию о проекте');
+      }
+    } catch (error) {
+      console.error('Error updating project info:', error);
+      toast.error('Не удалось обновить информацию о проекте');
+    }
   };
 
   // Функция для обновления URL Figma
@@ -672,27 +656,39 @@ export default function ProjectDetail() {
               
               {/* Calendar container */}
               <div className="calendar-container">
-                {project.days.map((day, index) => (
-                  <DayColumn
-                    key={day.id || `day-${index}`}
-                    day={day}
-                    index={index}
-                    data={day}
-                    onUpdate={handleDayUpdate}
-                    isReadOnly={demoMode}
-                    onDelete={handleDeleteDay}
-                    project={project}
-                    activeUsers={activeUsers}
-                    socket={socket}
-                  />
-                ))}
-                
-                {!demoMode && (
-                  <AddDayColumn 
-                    onAddDay={handleAddDay} 
-                    isDisabled={project.days.length >= 14}
-                  />
-                )}
+                <Calendar
+                  days={project.days}
+                  projectId={project.id}
+                  isDemo={demoMode}
+                  onUpdate={async (updatedDays) => {
+                    if (demoMode) return;
+                    
+                    try {
+                      const response = await fetch(`/api/projects/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ days: updatedDays })
+                      });
+                      
+                      const result = await response.json();
+                      
+                      if (result.success) {
+                        setProject({
+                          ...project,
+                          days: updatedDays
+                        });
+                        toast.success('Календарь обновлен');
+                      } else {
+                        toast.error('Не удалось обновить календарь');
+                      }
+                    } catch (error) {
+                      console.error('Error updating calendar:', error);
+                      toast.error('Не удалось обновить календарь');
+                    }
+                  }}
+                />
               </div>
             </div>
           </div>

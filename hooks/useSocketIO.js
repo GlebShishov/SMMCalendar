@@ -86,6 +86,7 @@ export default function useSocketIO(projectId) {
   }, []);
 
   return {
+    socket: socketRef.current,
     isConnected,
     emitImageReorder,
     subscribeToImageReorder

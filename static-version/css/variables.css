@@ -1,0 +1,104 @@
+:root {
+    /* Основные цвета */
+    --color-primary: #4a8df2;
+    --color-primary-hover: #3a7de2;
+    --color-secondary: #f2f2f2;
+    --color-secondary-hover: #e0e0e0;
+    --color-danger: #ff6b6b;
+    --color-danger-hover: #ff5252;
+    --color-success: #4caf50;
+    --color-success-hover: #3d9140;
+    --color-warning: #ffb74d;
+    --color-warning-hover: #ffa726;
+    
+    /* Нейтральные цвета */
+    --color-white: #ffffff;
+    --color-black: #000000;
+    --color-gray-100: #f9f9f9;
+    --color-gray-200: #f5f5f5;
+    --color-gray-300: #eee;
+    --color-gray-400: #ddd;
+    --color-gray-500: #ccc;
+    --color-gray-600: #999;
+    --color-gray-700: #666;
+    --color-gray-800: #555;
+    --color-gray-900: #333;
+    
+    /* Фоновые цвета */
+    --bg-primary: var(--color-white);
+    --bg-secondary: var(--color-gray-200);
+    --bg-highlight: #e9f0f8;
+    
+    /* Цвета текста */
+    --text-primary: var(--color-gray-900);
+    --text-secondary: var(--color-gray-700);
+    --text-muted: var(--color-gray-600);
+    --text-light: var(--color-white);
+    
+    /* Отступы */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 15px;
+    --space-lg: 20px;
+    --space-xl: 30px;
+    --space-xxl: 40px;
+    
+    /* Размеры компонентов */
+    --sidebar-width: 250px;
+    --day-column-width: 350px;
+    --modal-width: 500px;
+    
+    /* Границы */
+    --border-radius-sm: 3px;
+    --border-radius-md: 4px;
+    --border-radius-lg: 8px;
+    --border-radius-circle: 50%;
+    
+    --border-width-thin: 1px;
+    --border-width-normal: 2px;
+    --border-width-thick: 3px;
+    
+    --border-style-solid: solid;
+    --border-style-dashed: dashed;
+    
+    --border-color: var(--color-gray-300);
+    
+    /* Тени */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 5px 15px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 5px 20px rgba(0, 0, 0, 0.2);
+    
+    /* Шрифты */
+    --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-size-xs: 0.8rem;
+    --font-size-sm: 0.875rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-xxl: 1.5rem;
+    
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+    
+    /* Анимации */
+    --transition-speed-fast: 0.2s;
+    --transition-speed-normal: 0.3s;
+    --transition-speed-slow: 0.5s;
+    
+    /* Z-индексы */
+    --z-index-dropdown: 50;
+    --z-index-sticky: 80;
+    --z-index-fixed: 90;
+    --z-index-modal: 100;
+    --z-index-popover: 110;
+    --z-index-toast: 120;
+    
+    /* Расстояния между элементами */
+    --gap-xs: 5px;
+    --gap-sm: 10px;
+    --gap-md: 15px;
+    --gap-lg: 20px;
+    --gap-xl: 30px;
+} 

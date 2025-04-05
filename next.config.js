@@ -1,17 +1,33 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false, // Отключаем строгий режим для Socket.IO
+  reactStrictMode: true,
   images: {
     domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+        pathname: '/projects/**',
+      },
+    ],
   },
-  // Настройка для Socket.IO
-  webpack: (config, { isServer }) => {
-    // Добавляем поддержку WebSockets
-    if (!isServer) {
-      config.externals = [...config.externals, 'bufferutil', 'utf-8-validate'];
-    }
+  webpack: (config) => {
+    config.module.rules.push({
+      test: /\.svg$/,
+      use: ['@svgr/webpack'],
+    });
     return config;
   },
-}
+  // Добавляем обработку статических файлов из директории projects
+  async rewrites() {
+    return [
+      {
+        source: '/projects/:projectId/images/:path*',
+        destination: '/api/static/:projectId/:path*',
+      },
+    ];
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

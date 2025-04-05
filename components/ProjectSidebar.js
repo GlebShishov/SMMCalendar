@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { FaCopy, FaChevronLeft, FaChevronRight, FaGlobe, FaBuilding, FaInfoCircle, FaPalette, FaSave, FaEdit } from 'react-icons/fa';
+import { FaCopy, FaChevronLeft, FaChevronRight, FaGlobe, FaBuilding, FaInfoCircle, FaPalette, FaSave, FaEdit, FaTimes, FaLink, FaUsers } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 
 const ProjectSidebar = ({ project, isCollapsed, onToggleCollapse, onUpdateProject, onUpdateFigmaUrl }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -58,41 +59,50 @@ const ProjectSidebar = ({ project, isCollapsed, onToggleCollapse, onUpdateProjec
 
   // Сохранение данных
   const handleSave = async () => {
-    setIsSaving(true);
-    setSaveMessage('');
-    
     try {
-      const response = await fetch(`/api/projects/${project._id}/update-info`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
+      setIsSaving(true);
+      const result = await onUpdateProject({
+        ...project,
+        ...formData
       });
       
-      const data = await response.json();
-      
-      if (data.success) {
-        setSaveMessage('Информация успешно сохранена');
+      if (result.success) {
         setIsEditing(false);
-        
-        // Вызываем callback для обновления проекта в родительском компоненте
-        if (onUpdateProject) {
-          onUpdateProject(formData);
-        }
+        setSaveMessage('Изменения успешно сохранены');
+        toast.success('Изменения успешно сохранены');
       } else {
-        setSaveMessage(`Ошибка: ${data.message}`);
+        setSaveMessage('Ошибка при сохранении изменений');
+        toast.error('Ошибка при сохранении изменений');
       }
     } catch (error) {
-      console.error('Error saving project info:', error);
-      setSaveMessage('Ошибка при сохранении данных');
+      setSaveMessage('Ошибка при сохранении изменений');
+      toast.error('Ошибка при сохранении изменений');
     } finally {
       setIsSaving(false);
-      // Скрываем сообщение через 3 секунды
-      setTimeout(() => {
-        setSaveMessage('');
-      }, 3000);
     }
+  };
+
+  const handleFigmaUrlUpdate = async () => {
+    try {
+      const result = await onUpdateFigmaUrl(formData.figmaUrl);
+      if (result.success) {
+        toast.success('Ссылка на Figma обновлена');
+      } else {
+        toast.error('Ошибка при обновлении ссылки на Figma');
+      }
+    } catch (error) {
+      toast.error('Ошибка при обновлении ссылки на Figma');
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setFormData(project);
+    setSaveMessage('');
+    toast('Редактирование отменено', {
+      icon: '⚠️',
+      duration: 2000,
+    });
   };
 
   // Социальные сети для выбора
@@ -420,7 +430,7 @@ const ProjectSidebar = ({ project, isCollapsed, onToggleCollapse, onUpdateProjec
               )}
               <button 
                 className="edit-button ml-2"
-                onClick={onUpdateFigmaUrl}
+                onClick={handleFigmaUrlUpdate}
                 title="Редактировать URL Figma"
               >
                 <FaEdit />

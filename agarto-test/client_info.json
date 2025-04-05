@@ -1,0 +1,18 @@
+{
+  "name": "Агарто",
+  "description": "Компания по производству и продаже конфет и шоколада ручной работы",
+  "website": "https://agarto.ru",
+  "contacts": "Иванов Иван Иванович, +7 (999) 123-45-67, ivan@agarto.ru",
+  "notes": "Клиент предпочитает яркие и красочные посты с акцентом на качество продукции",
+  "socialAccounts": {
+    "instagram": "@agarto_chocolates",
+    "telegram": "agartoChocolate",
+    "vk": "vk.com/agarto_choco"
+  },
+  "marketingGoals": "Повысить узнаваемость бренда, увеличить продажи через интернет на 30%",
+  "targetAudience": "Женщины 25-45 лет, средний и высокий доход, интересующиеся здоровым питанием и органическими продуктами",
+  "competitors": "ШокоЛэнд, Sweet Dreams, Конфетти",
+  "brandColors": "#8B4513, #D2691E, #F5DEB3",
+  "publicationFrequency": "Instagram - 3 раза в неделю, VK - 5 раз в неделю, Telegram - ежедневно",
+  "lastModified": "2023-05-25T10:30:00.000Z"
+} 

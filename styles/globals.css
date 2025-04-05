@@ -7,6 +7,11 @@
   --background-rgb: 249, 250, 251;
 }
 
+.dark {
+  --foreground-rgb: 249, 250, 251;
+  --background-rgb: 31, 41, 55;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
@@ -25,6 +30,10 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.dark .day-column {
+  border-right-color: #374151;
 }
 
 .day-column:last-child {
@@ -46,6 +55,10 @@ body {
   background-color: rgba(59, 130, 246, 0.05);
 }
 
+.dark .day-column-empty:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
 .column-header {
   display: flex;
   align-items: center;
@@ -60,6 +73,10 @@ body {
   font-size: 12px;
   color: #6b7280;
   font-weight: 500;
+}
+
+.dark .column-number {
+  color: #9CA3AF;
 }
 
 .date-display {
@@ -77,10 +94,18 @@ body {
   background-color: rgba(59, 130, 246, 0.05);
 }
 
+.dark .date-display:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
 .date-icon {
   margin-left: 5px;
   font-size: 14px;
   color: #6b7280;
+}
+
+.dark .date-icon {
+  color: #9CA3AF;
 }
 
 .date-input-container {
@@ -95,6 +120,14 @@ body {
   border-radius: 4px;
   text-align: center;
   width: 80%;
+  background-color: white;
+  color: #1F2937;
+}
+
+.dark .date-input {
+  background-color: #374151;
+  border-color: #4B5563;
+  color: #F9FAFB;
 }
 
 .date-input:focus {

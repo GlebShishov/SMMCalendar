@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проекты | СММ Календарь</title>
+    
+    <!-- Загружаем FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Наши стили -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/projects.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Сайдбар -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="img/logo.svg" alt="СММ Календарь" class="logo">
+            </div>
+            <div class="sidebar-content">
+                <a href="#" class="sidebar-link active"><i class="fas fa-folder"></i> Проекты</a>
+                <a href="#" class="sidebar-link"><i class="fas fa-chart-bar"></i> Статистика</a>
+                <a href="#" class="sidebar-link"><i class="fas fa-cog"></i> Настройки</a>
+            </div>
+        </div>
+        
+        <!-- Основной контент -->
+        <div class="main-content">
+            <div class="header">
+                <h1>Проекты</h1>
+                <div class="header-buttons">
+                    <button id="change-directory-btn" class="btn btn-secondary"><i class="fas fa-folder-open"></i> Изменить директорию</button>
+                    <button id="new-project-btn" class="btn"><i class="fas fa-plus"></i> Новый проект</button>
+                </div>
+            </div>
+            
+            <!-- Список проектов -->
+            <div id="projects-container" class="projects-container">
+                <!-- Контент будет добавлен через JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно для создания проекта -->
+    <div id="create-project-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Создать новый проект</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="create-project-form">
+                    <div class="form-group">
+                        <label for="project-name">Название проекта</label>
+                        <input type="text" id="project-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="project-description">Описание</label>
+                        <textarea id="project-description"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-cancel">Отмена</button>
+                        <button type="submit" class="btn">Создать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Загружаем JavaScript -->
+    <script src="js/filesystem.js"></script>
+    <script src="js/projects.js"></script>
+</body>
+</html> 

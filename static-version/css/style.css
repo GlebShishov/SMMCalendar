@@ -1,0 +1,115 @@
+/* Импортируем файл с переменными */
+@import url('variables.css');
+
+/* Сброс стилей */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-md);
+    line-height: 1.5;
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+}
+
+/* Основной контейнер приложения */
+.app-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Сайдбар */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--bg-primary);
+    border-right: var(--border-width-thin) var(--border-style-solid) var(--border-color);
+    display: flex;
+    flex-direction: column;
+    z-index: var(--z-index-fixed);
+}
+
+.sidebar-header {
+    padding: var(--space-lg);
+    border-bottom: var(--border-width-thin) var(--border-style-solid) var(--border-color);
+    text-align: center;
+}
+
+.logo {
+    max-width: 100%;
+    height: 40px;
+}
+
+.sidebar-content {
+    flex-grow: 1;
+    padding: var(--space-md) 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: var(--space-sm) var(--space-lg);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: background-color var(--transition-speed-fast);
+}
+
+.sidebar-link i {
+    margin-right: var(--space-sm);
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar-link:hover {
+    background-color: var(--bg-secondary);
+}
+
+.sidebar-link.active {
+    color: var(--color-primary);
+    background-color: var(--bg-highlight);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Основной контент */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.header {
+    padding: var(--space-lg);
+    background-color: var(--bg-primary);
+    border-bottom: var(--border-width-thin) var(--border-style-solid) var(--border-color);
+    z-index: var(--z-index-sticky);
+}
+
+.header h1 {
+    font-size: var(--font-size-xxl);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+}
+
+/* Кнопки */
+.btn {
+    cursor: pointer;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--border-radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    border: none;
+    background-color: var(--color-primary);
+    color: var(--text-light);
+    transition: background-color var(--transition-speed-fast);
+}
+
+.btn:hover {
+    background-color: var(--color-primary-hover);
+} 

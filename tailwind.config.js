@@ -5,6 +5,7 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -13,6 +14,11 @@ module.exports = {
         background: '#F9FAFB',
         card: '#FFFFFF',
         text: '#1F2937',
+        dark: {
+          background: '#1F2937',
+          card: '#374151',
+          text: '#F9FAFB',
+        }
       },
     },
   },
