@@ -1,15 +1,16 @@
 {
-  "date": "2025-04-05",
+  "date": "2025-04-24",
   "posts": [
     {
       "socialNetwork": "Telegram",
-      "contentType": "Пост",
+      "contentType": "Статья",
       "images": [
-        "images/img_1743869600235_16.png"
+        "images/img_1743876426974_AGR17.png",
+        "images/img_1743877815164_15.png"
       ],
-      "text": "",
-      "created": "2025-04-05T15:50:41.165Z",
-      "lastModified": "2025-04-05T16:13:20.483Z"
+      "text": "<p><br></p>",
+      "created": "2025-04-05T16:41:08.997Z",
+      "lastModified": "2025-04-05T18:30:15.366Z"
     }
   ]
 }

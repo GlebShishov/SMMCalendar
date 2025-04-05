@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Проекты | СММ Календарь</title>
+    <meta name="description" content="SMM Календарь - инструмент для планирования и управления контентом в социальных сетях">
+    <title>SMM Календарь - Проекты</title>
     
     <!-- Загружаем FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -14,61 +15,139 @@
     <link rel="stylesheet" href="css/projects.css">
 </head>
 <body>
-    <div class="app-container">
-        <!-- Сайдбар -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <img src="img/logo.svg" alt="СММ Календарь" class="logo">
-            </div>
-            <div class="sidebar-content">
-                <a href="#" class="sidebar-link active"><i class="fas fa-folder"></i> Проекты</a>
-                <a href="#" class="sidebar-link"><i class="fas fa-chart-bar"></i> Статистика</a>
-                <a href="#" class="sidebar-link"><i class="fas fa-cog"></i> Настройки</a>
-            </div>
-        </div>
-        
-        <!-- Основной контент -->
-        <div class="main-content">
-            <div class="header">
-                <h1>Проекты</h1>
-                <div class="header-buttons">
-                    <button id="change-directory-btn" class="btn btn-secondary"><i class="fas fa-folder-open"></i> Изменить директорию</button>
-                    <button id="new-project-btn" class="btn"><i class="fas fa-plus"></i> Новый проект</button>
-                </div>
-            </div>
+    <!-- Сайдбар -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-content">
+            <header class="sidebar-header">
+                <!-- Кнопка скрытия/разворачивания сайдбара перемещена сюда -->
+                <button class="toggle-sidebar-btn" id="toggleSidebar" type="button" aria-label="Переключить видимость боковой панели">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+            </header>
             
-            <!-- Список проектов -->
-            <div id="projects-container" class="projects-container">
-                <!-- Контент будет добавлен через JavaScript -->
-            </div>
+            <nav aria-label="Основная навигация">
+                <ul class="sidebar-menu">
+                    <li class="sidebar-menu-item">
+                        <a href="#" class="sidebar-menu-link active" aria-current="page">
+                            <span class="sidebar-menu-icon" aria-hidden="true"><i class="fas fa-home"></i></span>
+                            <span>Главная</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#" class="sidebar-menu-link">
+                            <span class="sidebar-menu-icon" aria-hidden="true"><i class="fas fa-chart-bar"></i></span>
+                            <span>Статистика</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#" class="sidebar-menu-link">
+                            <span class="sidebar-menu-icon" aria-hidden="true"><i class="fas fa-cog"></i></span>
+                            <span>Настройки</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#" class="sidebar-menu-link" id="toggle-theme-btn">
+                            <span class="sidebar-menu-icon" aria-hidden="true"><i class="fas fa-moon"></i></span>
+                            <span>Переключить тему</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
-    </div>
+    </aside>
     
-    <!-- Модальное окно для создания проекта -->
-    <div id="create-project-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Создать новый проект</h2>
-                <button class="close-modal">&times;</button>
+    <!-- Основной контент -->
+    <main class="main-content" id="mainContent">
+        <header class="header">
+            <h2 class="page-title">Проекты</h2>
+            <div class="header-buttons">
+                <button class="btn btn-secondary" id="change-directory-btn" type="button">
+                    <i class="fas fa-folder-open" aria-hidden="true"></i> Изменить директорию
+                </button>
+                <button class="btn btn-primary" id="new-project-btn" type="button">
+                    <i class="fas fa-plus" aria-hidden="true"></i> Создать проект
+                </button>
             </div>
+        </header>
+        
+        <section class="projects-container" id="projectsContainer" aria-label="Список проектов">
+            <!-- Проекты будут загружены сюда динамически -->
+            <div class="empty-state" id="emptyState">
+                <i class="fas fa-folder-open empty-icon" aria-hidden="true"></i>
+                <p>У вас пока нет проектов. Создайте свой первый проект!</p>
+                <button class="btn btn-primary" id="create-first-project" type="button">Создать проект</button>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Модальное окно для создания нового проекта -->
+    <dialog id="createProjectModal" class="modal" aria-labelledby="createProjectTitle">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2 id="createProjectTitle">Создать новый проект</h2>
+                <button class="modal-close" type="button" aria-label="Закрыть">&times;</button>
+            </header>
+            
             <div class="modal-body">
-                <form id="create-project-form">
+                <form id="createProjectForm">
                     <div class="form-group">
-                        <label for="project-name">Название проекта</label>
-                        <input type="text" id="project-name" required>
+                        <label for="projectName">Название проекта</label>
+                        <input type="text" id="projectName" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="project-description">Описание</label>
-                        <textarea id="project-description"></textarea>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-cancel">Отмена</button>
-                        <button type="submit" class="btn">Создать</button>
+                        <label for="projectDescription">Описание проекта</label>
+                        <textarea id="projectDescription" class="form-control" rows="3"></textarea>
                     </div>
                 </form>
             </div>
+            
+            <footer class="modal-footer">
+                <button class="btn btn-secondary modal-cancel" type="button">Отмена</button>
+                <button class="btn btn-primary" id="submitProject" type="button">Создать</button>
+            </footer>
         </div>
-    </div>
+    </dialog>
+    
+    <!-- Подключаем дополнительные функции -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация сайдбара
+        const toggleBtn = document.getElementById('toggleSidebar');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        
+        if (toggleBtn && sidebar && mainContent) {
+            // Устанавливаем начальное состояние из localStorage
+            if (localStorage.getItem('sidebar_collapsed') === 'true') {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+            }
+            
+            // Обработчик клика по кнопке сайдбара
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed'));
+            });
+        }
+        
+        // Инициализируем тему при загрузке страницы
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        // Обработчик для кнопки переключения темы
+        const themeToggleBtn = document.getElementById('toggle-theme-btn');
+        if (themeToggleBtn) {
+            // Обработчик будет назначен в projects.js после загрузки
+            
+            // Установка правильной иконки при загрузке
+            const iconElement = themeToggleBtn.querySelector('i');
+            if (iconElement && savedTheme === 'dark') {
+                iconElement.className = 'fas fa-sun';
+            }
+        }
+    });
+    </script>
     
     <!-- Загружаем JavaScript -->
     <script src="js/filesystem.js"></script>

@@ -44,7 +44,9 @@
     --space-xxl: 40px;
     
     /* Размеры компонентов */
-    --sidebar-width: 250px;
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 60px;
+    --sidebar-min-width: 180px;
     --day-column-width: 350px;
     --modal-width: 500px;
     
@@ -102,3 +104,40 @@
     --gap-lg: 20px;
     --gap-xl: 30px;
 } 
+
+/* Темная тема - Темно-коричневые оттенки */
+[data-theme="dark"] {
+    /* Основные цвета */
+    --color-primary: #c49a6c; /* Янтарный/коричневый */
+    --color-primary-hover: #b38a5c; /* Чуть темнее янтарный */
+    
+    /* Нейтральные коричневые оттенки */
+    --color-gray-100: #3e322a; /* Темно-коричневый */
+    --color-gray-200: #4a3c33; /* Чуть светлее коричневый */
+    --color-gray-300: #5a4d44; /* Еще чуть светлее */
+    --color-gray-400: #6b5e55; /* Средний коричневый */
+    --color-gray-500: #7d7066; /* Коричнево-серый */
+    --color-gray-600: #9a8b7d; /* Бежево-коричневый */
+    --color-gray-700: #b5a696; /* Светлый бежевый */
+    --color-gray-800: #d2c8bc; /* Очень светлый бежевый */
+    --color-gray-900: #efe7dd; /* Почти белый с бежевым оттенком */
+    
+    /* Фоновые цвета */
+    --bg-primary: #2c211b; /* Темный шоколадно-коричневый фон */
+    --bg-secondary: #362a23; /* Чуть светлее основного фона */
+    --bg-highlight: #42332a; /* Выделенный фон */
+    
+    /* Цвета текста */
+    --text-primary: #efe7dd; /* Светлый текст с бежевым оттенком */
+    --text-secondary: #d2c8bc; /* Чуть темнее текст */
+    --text-muted: #b5a696; /* Приглушенный текст */
+    
+    /* Границы */
+    --border-color: #5a4d44;
+    
+    /* Тени */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 5px 15px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 5px 20px rgba(0, 0, 0, 0.4);
+}

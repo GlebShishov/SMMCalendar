@@ -1,0 +1,68 @@
+{
+  "clientInfo": {
+    "companyName": "Agarto",
+    "website": "agarto-cucine.ru",
+    "contacts": {
+      "phone": "+7 927 061-76-20",
+      "email": "info@agarto-cucine.ru",
+      "address": "г. Казань, ул. Примерная, 123"
+    },
+    "socialMedia": {
+      "telegram": "agarto_cucine",
+      "instagram": "@agarto.cucine",
+      "vk": "agarto_cucine",
+      "facebook": "agarto.cucine"
+    },
+    "brandInfo": {
+      "description": "Производство и продажа кухонной мебели премиум-класса",
+      "usp": [
+        "Индивидуальный дизайн",
+        "Итальянские комплектующие",
+        "10 лет гарантии"
+      ],
+      "targetAudience": "Владельцы квартир и домов премиум-класса, дизайнеры интерьеров",
+      "priceRange": "от 300 000 руб."
+    },
+    "contentGuidelines": {
+      "tone": "Профессиональный, но дружелюбный",
+      "preferredTopics": [
+        "Дизайн кухонь",
+        "Материалы и технологии",
+        "Советы по обустройству",
+        "Проекты и реализации"
+      ],
+      "forbiddenTopics": [
+        "Критика конкурентов",
+        "Политика",
+        "Религия"
+      ],
+      "hashtagsToUse": [
+        "#AgartoКухни",
+        "#КухниКазань",
+        "#ДизайнКухни",
+        "#ИтальянскиеКухни"
+      ]
+    },
+    "designPreferences": {
+      "brandColors": [
+        "#2C3E50",
+        "#E74C3C",
+        "#ECF0F1"
+      ],
+      "fonts": {
+        "primary": "Montserrat",
+        "secondary": "Open Sans"
+      },
+      "logo": {
+        "main": "/projects/agarto-test/images/logo-main.png",
+        "alternative": "/projects/agarto-test/images/logo-white.png"
+      }
+    }
+  },
+  "lastModified": "2024-03-20T10:00:00.000Z",
+  "lastModifiedBy": "test-user-123",
+  "metaInfo": {
+    "lastModified": "2025-04-05T18:05:11.194Z",
+    "created": "2025-04-05T17:05:49.089Z"
+  }
+}

@@ -1,6 +1,18 @@
 /* Импортируем файл с переменными */
 @import url('variables.css');
 
+/* Добавляем класс для визуально скрытых элементов (для доступности) */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
 /* Сброс стилей */
 * {
     margin: 0;
@@ -25,63 +37,158 @@ body {
 
 /* Сайдбар */
 .sidebar {
-    width: var(--sidebar-width);
+    width: 260px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
     background-color: var(--bg-primary);
-    border-right: var(--border-width-thin) var(--border-style-solid) var(--border-color);
-    display: flex;
-    flex-direction: column;
-    z-index: var(--z-index-fixed);
+    border-right: 1px solid var(--border-color);
+    transition: width 0.3s ease;
+    z-index: 1000;
 }
 
-.sidebar-header {
-    padding: var(--space-lg);
-    border-bottom: var(--border-width-thin) var(--border-style-solid) var(--border-color);
-    text-align: center;
-}
-
-.logo {
-    max-width: 100%;
-    height: 40px;
+.sidebar.collapsed {
+    width: 60px;
 }
 
 .sidebar-content {
-    flex-grow: 1;
-    padding: var(--space-md) 0;
+    height: 100%;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
 }
 
-.sidebar-link {
+.sidebar-header {
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.toggle-sidebar-btn {
+    width: 30px;
+    height: 30px;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    padding: var(--space-sm) var(--space-lg);
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed .toggle-sidebar-btn {
+    transform: rotate(180deg);
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu-item {
+    margin: 5px 0;
+}
+
+.sidebar-menu-link {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
     color: var(--text-secondary);
     text-decoration: none;
-    transition: background-color var(--transition-speed-fast);
+    transition: background-color 0.2s ease;
 }
 
-.sidebar-link i {
-    margin-right: var(--space-sm);
-    width: 20px;
-    text-align: center;
+.sidebar-menu-link:hover {
+    background-color: var(--bg-hover);
 }
 
-.sidebar-link:hover {
-    background-color: var(--bg-secondary);
-}
-
-.sidebar-link.active {
+.sidebar-menu-link.active {
+    background-color: var(--color-primary-light);
     color: var(--color-primary);
-    background-color: var(--bg-highlight);
-    font-weight: var(--font-weight-medium);
+    font-weight: 500;
+}
+
+.sidebar-menu-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.sidebar-footer-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar-button {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: 100%;
+    text-align: left;
+}
+
+.sidebar-button:hover {
+    background-color: var(--bg-hover);
+}
+
+.sidebar-button i {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Стили для скрытого сайдбара */
+.sidebar.collapsed .sidebar-menu-link span:not(.sidebar-menu-icon) {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-menu-icon {
+    margin-right: 0;
+    width: 100%;
+}
+
+.sidebar.collapsed .sidebar-button span {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-button i {
+    margin-right: 0;
+    width: 100%;
 }
 
 /* Основной контент */
 .main-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    margin-left: 260px;
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+}
+
+.main-content.expanded {
+    margin-left: 60px;
 }
 
 .header {
@@ -111,5 +218,266 @@ body {
 }
 
 .btn:hover {
+    background-color: var(--color-primary-hover);
+}
+
+/* Стиль для кнопки переключения темы */
+.theme-toggle-icon {
+    transition: transform var(--transition-speed-normal);
+}
+
+/* В режиме темной темы поворачиваем иконку месяца */
+[data-theme="dark"] .fa-moon {
+    transform: rotate(180deg);
+    color: #ffcc00;
+}
+
+/* Переключаем иконку на солнце в темном режиме */
+[data-theme="dark"] #toggle-theme-btn .fa-moon:before {
+    content: "\f185"; /* Иконка солнца */
+}
+
+/* Плавный переход для всех элементов при изменении темы */
+body, .sidebar, .main-content, .modal-content, .day-column, 
+.post, .header, .form-control, .btn, input, textarea, select {
+    transition: background-color var(--transition-speed-normal),
+                color var(--transition-speed-normal),
+                border-color var(--transition-speed-normal);
+}
+
+/* Стили для темной темы - адаптация редактора Quill */
+[data-theme="dark"] .ql-editor {
+    color: var(--text-primary); /* Используем светлый текст с бежевым оттенком */
+    background-color: var(--color-gray-200); /* Используем коричневый фон */
+}
+
+[data-theme="dark"] .ql-toolbar {
+    background-color: var(--color-gray-200); /* Фон панели инструментов */
+    color: var(--text-primary); /* Светлый текст с бежевым оттенком */
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .ql-toolbar button {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .ql-toolbar button svg,
+[data-theme="dark"] .ql-toolbar button svg path {
+    fill: var(--text-primary);
+    stroke: var(--text-primary);
+}
+
+[data-theme="dark"] .ql-toolbar .ql-picker {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .ql-toolbar .ql-picker-options {
+    background-color: var(--color-gray-200);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .ql-container {
+    border-color: var(--border-color);
+}
+
+/* Стили для модальных окон и форм в темной теме */
+[data-theme="dark"] .modal-content {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="url"],
+[data-theme="dark"] input[type="tel"],
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+    background-color: var(--color-gray-200);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus {
+    background-color: var(--color-gray-300);
+    color: var(--text-primary);
+    border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .form-control::placeholder,
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] label {
+    color: var(--text-secondary);
+}
+
+/* Стили для уведомлений */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: var(--border-radius-md);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-index-toast);
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    max-width: 400px;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.notification-info {
+    border-left: 4px solid var(--color-primary);
+}
+
+.notification-success {
+    border-left: 4px solid var(--color-success);
+}
+
+.notification-warning {
+    border-left: 4px solid var(--color-warning);
+}
+
+.notification-error {
+    border-left: 4px solid var(--color-danger);
+}
+
+/* Стили для темной темы */
+[data-theme="dark"] .notification {
+    background-color: var(--bg-secondary);
+}
+
+/* Стили для drag-and-drop функциональности */
+.image-preview[draggable="true"] {
+    cursor: grab;
+}
+
+.image-preview.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+    z-index: 1000;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.images-container.drag-over {
+    border: 2px dashed var(--color-primary);
+    padding: 4px;
+}
+
+.drop-indicator {
+    height: 4px;
+    background-color: var(--color-primary);
+    margin: 6px 0;
+    width: 100%;
+    border-radius: 2px;
+    pointer-events: none;
+}
+
+/* Модальные окна */
+.modal {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    padding: 0;
+    width: 80%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow: hidden;
+}
+
+.modal::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.modal-header {
+    padding: 15px 20px;
+    background-color: var(--color-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.modal .form-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal .modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+#directorySelectionModal .form-actions {
+    justify-content: center;
+}
+
+#directorySelectionModal .btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+}
+
+#directorySelectionModal p {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* Стили для кнопок */
+.primary-btn {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.primary-btn:hover {
     background-color: var(--color-primary-hover);
 } 

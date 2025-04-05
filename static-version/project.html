@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SMM Календарь - инструмент планирования контента для социальных сетей">
     <title>SMM Календарь - Проект</title>
     
     <!-- Загружаем FontAwesome -->
@@ -16,96 +17,90 @@
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/project.css">
+    <link rel="stylesheet" href="css/fixes.css">
 </head>
 <body>
     <!-- Сайдбар -->
-    <div class="sidebar" id="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-content">
-            <div class="sidebar-header">
-                <h2 class="sidebar-title">SMM Календарь</h2>
-            </div>
+            <header class="sidebar-header">
+                <!-- Кнопка скрытия/разворачивания сайдбара перемещена сюда -->
+                <button class="toggle-sidebar-btn" id="toggleSidebar" type="button" aria-label="Переключить видимость боковой панели">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+            </header>
             
-            <ul class="sidebar-menu">
-                <li class="sidebar-menu-item">
-                    <a href="index.html" class="sidebar-menu-link">
-                        <span class="sidebar-menu-icon"><i class="fas fa-home"></i></span>
-                        Главная
-                    </a>
-                </li>
-                <li class="sidebar-menu-item">
-                    <a href="#" class="sidebar-menu-link active">
-                        <span class="sidebar-menu-icon"><i class="fas fa-calendar-alt"></i></span>
-                        Календарь
-                    </a>
-                </li>
-                <li class="sidebar-menu-item">
-                    <a href="#" class="sidebar-menu-link" id="client-info-btn">
-                        <span class="sidebar-menu-icon"><i class="fas fa-user"></i></span>
-                        О клиенте
-                    </a>
-                </li>
-                <li class="sidebar-menu-item">
-                    <a href="#" class="sidebar-menu-link" id="change-directory-btn">
-                        <span class="sidebar-menu-icon"><i class="fas fa-folder-open"></i></span>
-                        Изменить директорию
-                    </a>
-                </li>
-            </ul>
+            <nav aria-label="Основная навигация">
+                <ul class="sidebar-menu">
+                    <li class="sidebar-menu-item">
+                        <a href="index.html" class="sidebar-menu-link">
+                            <span class="sidebar-menu-icon" aria-hidden="true"><i class="fas fa-home"></i></span>
+                            <span>Главная</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#" class="sidebar-menu-link active" aria-current="page">
+                            <span class="sidebar-menu-icon" aria-hidden="true"><i class="fas fa-calendar-alt"></i></span>
+                            <span>Календарь</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#" class="sidebar-menu-link" id="client-info-btn">
+                            <span class="sidebar-menu-icon" aria-hidden="true"><i class="fas fa-user"></i></span>
+                            <span>О клиенте</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="#" class="sidebar-menu-link" id="change-directory-btn">
+                            <span class="sidebar-menu-icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+                            <span>Изменить директорию</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
             
-            <div class="project-info">
-                <div class="project-info-item">
-                    <div class="project-info-label">Название проекта</div>
-                    <div class="project-info-value" id="projectName">Загрузка...</div>
-                </div>
-                <div class="project-info-item">
-                    <div class="project-info-label">Описание</div>
-                    <div class="project-info-value" id="projectDescription">Загрузка...</div>
-                </div>
-            </div>
-            
-            <!-- Добавляем блок с кнопками в нижней части сайдбара -->
-            <div class="sidebar-footer">
+            <!-- Блок с кнопками в нижней части сайдбара -->
+            <footer class="sidebar-footer">
                 <div class="sidebar-footer-buttons">
-                    <button class="sidebar-button" id="download-csv-btn">
-                        <i class="fas fa-file-download"></i>
-                        Скачать CSV проекта
+                    <button class="sidebar-button" id="toggle-theme-btn" type="button" aria-label="Переключить светлую/темную тему">
+                        <i class="fas fa-moon" aria-hidden="true"></i>
+                        <span>Переключить тему</span>
                     </button>
-                    <button class="sidebar-button" id="upload-csv-btn">
-                        <i class="fas fa-file-upload"></i>
-                        Загрузить CSV
+                    <button class="sidebar-button" id="download-csv-btn" type="button">
+                        <i class="fas fa-file-download" aria-hidden="true"></i>
+                        <span>Скачать CSV проекта</span>
                     </button>
-                    <button class="sidebar-button" id="upload-client-info-btn">
-                        <i class="fas fa-user-cog"></i>
-                        Загрузить информацию о клиенте
+                    <button class="sidebar-button" id="upload-csv-btn" type="button">
+                        <i class="fas fa-file-upload" aria-hidden="true"></i>
+                        <span>Загрузить CSV</span>
+                    </button>
+                    <button class="sidebar-button" id="upload-client-info-btn" type="button">
+                        <i class="fas fa-user-cog" aria-hidden="true"></i>
+                        <span>Загрузить информацию о клиенте</span>
                     </button>
                 </div>
-            </div>
+            </footer>
         </div>
-        
-        <!-- Кнопка скрытия/разворачивания сайдбара -->
-        <button class="toggle-sidebar-btn" id="toggleSidebar">
-            <i class="fas fa-chevron-left"></i>
-        </button>
-    </div>
+    </aside>
     
     <!-- Основной контент -->
-    <div class="main-content" id="mainContent">
-        <div id="calendar">
+    <main class="main-content" id="mainContent">
+        <section id="calendar" aria-label="Календарь контента">
             <!-- Здесь будет отображаться календарь -->
-        </div>
-    </div>
+        </section>
+    </main>
     
     <!-- Модальное окно для информации о клиенте -->
-    <div id="clientInfoModal" class="modal">
+    <dialog id="clientInfoModal" class="modal" aria-labelledby="clientInfoTitle">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2>Информация о клиенте</h2>
-                <button class="modal-close">&times;</button>
-            </div>
+            <header class="modal-header">
+                <h2 id="clientInfoTitle">Информация о клиенте</h2>
+                <button class="modal-close" type="button" aria-label="Закрыть">&times;</button>
+            </header>
             <div class="modal-body">
                 <!-- Основная информация -->
-                <div class="form-section">
-                    <h4>Основная информация</h4>
+                <section class="form-section" aria-labelledby="basicInfoTitle">
+                    <h3 id="basicInfoTitle">Основная информация</h3>
                     <div class="form-group">
                         <label for="clientName">Название компании</label>
                         <input type="text" id="clientName" class="form-control">
@@ -114,11 +109,11 @@
                         <label for="clientWebsite">Сайт компании</label>
                         <input type="url" id="clientWebsite" class="form-control" placeholder="https://example.com">
                     </div>
-                </div>
+                </section>
 
                 <!-- Контакты -->
-                <div class="form-section">
-                    <h4>Контактные данные</h4>
+                <section class="form-section" aria-labelledby="contactInfoTitle">
+                    <h3 id="contactInfoTitle">Контактные данные</h3>
                     <div class="form-group">
                         <label for="clientPhone">Телефон</label>
                         <input type="tel" id="clientPhone" class="form-control" placeholder="+7 (123) 456-7890">
@@ -131,11 +126,11 @@
                         <label for="clientAddress">Адрес</label>
                         <input type="text" id="clientAddress" class="form-control" placeholder="г. Москва, ул. Примерная, д. 1">
                     </div>
-                </div>
+                </section>
 
                 <!-- Социальные сети -->
-                <div class="form-section">
-                    <h4>Социальные сети</h4>
+                <section class="form-section" aria-labelledby="socialNetworksTitle">
+                    <h3 id="socialNetworksTitle">Социальные сети</h3>
                     <div class="form-group">
                         <label for="clientInstagram">Instagram</label>
                         <input type="url" id="clientInstagram" class="form-control" placeholder="https://www.instagram.com/username">
@@ -153,11 +148,12 @@
                         <input type="url" id="clientFacebook" class="form-control" placeholder="https://www.facebook.com/username">
                     </div>
                     <button type="button" id="addSocialField" class="btn btn-secondary btn-sm">Добавить социальную сеть</button>
-                </div>
+                    <div id="additionalFieldsContainer" class="additional-fields-container"></div>
+                </section>
 
                 <!-- Информация о бренде -->
-                <div class="form-section">
-                    <h4>Информация о бренде</h4>
+                <section class="form-section" aria-labelledby="brandInfoTitle">
+                    <h3 id="brandInfoTitle">Информация о бренде</h3>
                     <div class="form-group">
                         <label for="clientDescription">Описание компании</label>
                         <textarea id="clientDescription" class="form-control" rows="3"></textarea>
@@ -174,11 +170,11 @@
                         <label for="clientPriceRange">Ценовой диапазон</label>
                         <input type="text" id="clientPriceRange" class="form-control" placeholder="1000-5000 руб.">
                     </div>
-                </div>
+                </section>
 
                 <!-- Гайдлайн для контента -->
-                <div class="form-section">
-                    <h4>Гайдлайн для контента</h4>
+                <section class="form-section" aria-labelledby="contentGuidelinesTitle">
+                    <h3 id="contentGuidelinesTitle">Гайдлайн для контента</h3>
                     <div class="form-group">
                         <label for="clientToneOfVoice">Тон общения</label>
                         <textarea id="clientToneOfVoice" class="form-control" rows="2"></textarea>
@@ -195,36 +191,36 @@
                         <label for="clientHashtags">Хештеги</label>
                         <textarea id="clientHashtags" class="form-control" rows="2"></textarea>
                     </div>
-                </div>
+                </section>
 
                 <!-- Настройки дизайна -->
-                <div class="form-section">
-                    <h4>Настройки дизайна</h4>
+                <section class="form-section" aria-labelledby="designSettingsTitle">
+                    <h3 id="designSettingsTitle">Настройки дизайна</h3>
                     <div class="form-group">
-                        <label for="clientBrandColors">Фирменные цвета (HEX, RGB)</label>
-                        <input type="text" id="clientBrandColors" class="form-control" placeholder="#FF5733, #33FF57">
+                        <label for="clientBrandColors">Фирменные цвета</label>
+                        <input type="text" id="clientBrandColors" class="form-control" placeholder="#ff0000, #00ff00, #0000ff">
                     </div>
                     <div class="form-group">
                         <label for="clientPrimaryFont">Основной шрифт</label>
-                        <input type="text" id="clientPrimaryFont" class="form-control" placeholder="Roboto">
+                        <input type="text" id="clientPrimaryFont" class="form-control" placeholder="Roboto, Arial">
                     </div>
                     <div class="form-group">
                         <label for="clientSecondaryFont">Дополнительный шрифт</label>
-                        <input type="text" id="clientSecondaryFont" class="form-control" placeholder="Montserrat">
+                        <input type="text" id="clientSecondaryFont" class="form-control" placeholder="Georgia, Times New Roman">
                     </div>
                     <div class="form-group">
-                        <label for="clientMainLogo">Ссылка на основной логотип</label>
-                        <input type="url" id="clientMainLogo" class="form-control" placeholder="https://example.com/logo.png">
+                        <label for="clientMainLogo">Основной логотип</label>
+                        <input type="text" id="clientMainLogo" class="form-control" placeholder="URL или описание логотипа">
                     </div>
                     <div class="form-group">
-                        <label for="clientAltLogo">Ссылка на альтернативный логотип</label>
-                        <input type="url" id="clientAltLogo" class="form-control" placeholder="https://example.com/alt-logo.png">
+                        <label for="clientAltLogo">Альтернативный логотип</label>
+                        <input type="text" id="clientAltLogo" class="form-control" placeholder="URL или описание логотипа">
                     </div>
-                </div>
+                </section>
 
-                <!-- Служебная информация -->
-                <div class="form-section">
-                    <h4>Служебная информация</h4>
+                <!-- Мета-информация -->
+                <section class="form-section" aria-labelledby="metaInfoTitle">
+                    <h3 id="metaInfoTitle">Мета-информация</h3>
                     <div class="form-group">
                         <label for="clientCreated">Дата создания</label>
                         <input type="text" id="clientCreated" class="form-control" readonly>
@@ -233,19 +229,120 @@
                         <label for="clientLastModified">Последнее изменение</label>
                         <input type="text" id="clientLastModified" class="form-control" readonly>
                     </div>
-                </div>
-
-                <!-- Контейнер для дополнительных полей -->
-                <div id="additionalFieldsContainer"></div>
+                </section>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary modal-cancel">Отмена</button>
-                <button class="btn btn-primary" id="saveClientInfoBtn">Сохранить</button>
-            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-cancel">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveClientInfoBtn">Сохранить</button>
+            </footer>
         </div>
-    </div>
+    </dialog>
     
+    <!-- Подключаем дополнительные функции для проекта -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация сайдбара
+        const toggleBtn = document.getElementById('toggleSidebar');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        
+        if (toggleBtn && sidebar && mainContent) {
+            // Устанавливаем начальное состояние из localStorage
+            if (localStorage.getItem('sidebar_collapsed') === 'true') {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+            }
+            
+            // Обработчик клика по кнопке сайдбара
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed'));
+            });
+        }
+        
+        // Обработчик для кнопки О клиенте
+        const clientInfoBtn = document.getElementById('client-info-btn');
+        const clientInfoModal = document.getElementById('clientInfoModal');
+        
+        if (clientInfoBtn && clientInfoModal) {
+            clientInfoBtn.addEventListener('click', function() {
+                // Загружаем информацию о клиенте
+                if (typeof loadClientInfo === 'function') {
+                    loadClientInfo();
+                }
+                // Показываем модальное окно
+                if (clientInfoModal.showModal) {
+                    clientInfoModal.showModal();
+                } else {
+                    clientInfoModal.classList.add('active');
+                }
+            });
+            
+            // Обработчики закрытия модального окна
+            const closeModalBtns = clientInfoModal.querySelectorAll('.modal-close, .modal-cancel');
+            closeModalBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (clientInfoModal.close) {
+                        clientInfoModal.close();
+                    } else {
+                        clientInfoModal.classList.remove('active');
+                    }
+                });
+            });
+            
+            // Закрытие модального окна при клике вне его содержимого
+            clientInfoModal.addEventListener('click', function(e) {
+                if (e.target === clientInfoModal) {
+                    if (clientInfoModal.close) {
+                        clientInfoModal.close();
+                    } else {
+                        clientInfoModal.classList.remove('active');
+                    }
+                }
+            });
+        }
+        
+        // Инициализируем тему при загрузке страницы
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        // Обработчик для кнопки переключения темы
+        const themeToggleBtn = document.getElementById('toggle-theme-btn');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                // Устанавливаем новую тему
+                document.documentElement.setAttribute('data-theme', newTheme);
+                
+                // Сохраняем выбор пользователя в localStorage
+                localStorage.setItem('theme', newTheme);
+                
+                // Обновляем иконку кнопки
+                const iconElement = themeToggleBtn.querySelector('i');
+                if (iconElement) {
+                    if (newTheme === 'dark') {
+                        iconElement.className = 'fas fa-sun';
+                    } else {
+                        iconElement.className = 'fas fa-moon';
+                    }
+                }
+            });
+            
+            // Установка правильной иконки при загрузке
+            const iconElement = themeToggleBtn.querySelector('i');
+            if (iconElement && savedTheme === 'dark') {
+                iconElement.className = 'fas fa-sun';
+            }
+        }
+    });
+    </script>
+
+    <!-- Инициализация скриптов -->
     <script src="js/filesystem.js"></script>
     <script src="js/project.js"></script>
+    <script src="js/fixes.js"></script>
 </body>
 </html> 

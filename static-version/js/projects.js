@@ -1,17 +1,26 @@
 // DOM элементы
-const projectsContainer = document.getElementById('projects-container');
+const projectsContainer = document.getElementById('projectsContainer');
 const newProjectBtn = document.getElementById('new-project-btn');
 const changeDirectoryBtn = document.getElementById('change-directory-btn');
-const createProjectModal = document.getElementById('create-project-modal');
-const createProjectForm = document.getElementById('create-project-form');
-const projectNameInput = document.getElementById('project-name');
-const projectDescInput = document.getElementById('project-description');
-const closeModalBtn = document.querySelector('.close-modal');
-const cancelBtn = document.querySelector('.btn-cancel');
+const createProjectModal = document.getElementById('createProjectModal');
+const createProjectForm = document.getElementById('createProjectForm');
+const projectNameInput = document.getElementById('projectName');
+const projectDescInput = document.getElementById('projectDescription');
+const closeModalBtn = document.querySelector('.modal-close');
+const cancelBtn = document.querySelector('.modal-cancel');
 
 // Функция для инициализации страницы
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // Инициализируем тему
+        initializeTheme();
+        
+        // Создаем экземпляр файловой системы, если он не существует
+        if (!window.filesystem) {
+            console.log('Создаем новый экземпляр файловой системы');
+            window.filesystem = new FileSystem();
+        }
+        
         // Проверяем, готов ли filesystem
         if (window.filesystem.checkReady()) {
             console.log('Filesystem готов, загружаем проекты');
@@ -31,6 +40,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 } catch (error) {
                     console.error('Ошибка при разборе состояния filesystem:', error);
+                    // Очищаем некорректные данные
+                    localStorage.removeItem('filesystem_state');
+                    localStorage.removeItem('filesystem_root_handle');
                 }
             }
             
@@ -42,6 +54,51 @@ document.addEventListener('DOMContentLoaded', async () => {
         showError(`Ошибка: ${error.message}`);
     }
 });
+
+// Функция для переключения темы
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    // Устанавливаем новую тему
+    document.documentElement.setAttribute('data-theme', newTheme);
+    
+    // Сохраняем выбор пользователя в localStorage
+    localStorage.setItem('theme', newTheme);
+    
+    // Обновляем иконку кнопки
+    updateThemeButtonIcon(newTheme);
+    
+    // Показываем уведомление, если функция showNotification доступна
+    if (typeof showNotification === 'function') {
+        const themeName = newTheme === 'dark' ? 'темно-коричневая' : 'светлая';
+        showNotification(`Применена ${themeName} тема`, 'success', 1500);
+    }
+}
+
+// Функция для инициализации темы
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Обновляем иконку кнопки
+    updateThemeButtonIcon(savedTheme);
+}
+
+// Функция для обновления иконки кнопки переключения темы
+function updateThemeButtonIcon(theme) {
+    const toggleBtn = document.getElementById('toggle-theme-btn');
+    if (!toggleBtn) return;
+    
+    const iconElement = toggleBtn.querySelector('i');
+    if (iconElement) {
+        if (theme === 'dark') {
+            iconElement.className = 'fas fa-sun';  // Солнце для темной темы (чтобы переключиться на светлую)
+        } else {
+            iconElement.className = 'fas fa-moon'; // Луна для светлой темы (чтобы переключиться на темную)
+        }
+    }
+}
 
 // Функция для отображения интерфейса выбора директории
 function showDirectorySelection(message = 'Пожалуйста, выберите директорию с проектами SMM-календаря') {
@@ -55,6 +112,9 @@ function showDirectorySelection(message = 'Пожалуйста, выберит�
     document.getElementById('select-directory-btn').addEventListener('click', async () => {
         try {
             console.log('Инициализация filesystem...');
+            // Очищаем предыдущее состояние перед инициализацией
+            localStorage.removeItem('filesystem_state');
+            localStorage.removeItem('filesystem_root_handle');
             await window.filesystem.initialize();
             
             // Проверяем, что filesystem готов
@@ -195,14 +255,14 @@ async function createProject(event) {
         };
         
         // Создаем директорию проекта и сохраняем мета-данные
-        await window.filesystem.getDirectory(`projects/${projectId}`);
-        await window.filesystem.writeFile(`projects/${projectId}/meta.json`, JSON.stringify(meta, null, 2));
+        await window.filesystem.getDirectory(projectId);
+        await window.filesystem.writeFile(`${projectId}/meta.json`, JSON.stringify(meta, null, 2));
         
         // Создаем директорию для дней
-        await window.filesystem.getDirectory(`projects/${projectId}/days`);
+        await window.filesystem.getDirectory(`${projectId}/days`);
         
         // Создаем файл order.json с пустым списком дат
-        await window.filesystem.writeFile(`projects/${projectId}/order.json`, JSON.stringify({ dates: [] }, null, 2));
+        await window.filesystem.writeFile(`${projectId}/order.json`, JSON.stringify({ dates: [] }, null, 2));
         
         // Закрываем модальное окно и обновляем список проектов
         closeCreateProjectModal();
@@ -242,4 +302,38 @@ newProjectBtn.addEventListener('click', openCreateProjectModal);
 changeDirectoryBtn.addEventListener('click', changeProjectsDirectory);
 closeModalBtn.addEventListener('click', closeCreateProjectModal);
 cancelBtn.addEventListener('click', closeCreateProjectModal);
-createProjectForm.addEventListener('submit', createProject); 
+createProjectForm.addEventListener('submit', createProject);
+
+// Добавляем обработчик для кнопки переключения темы
+const toggleThemeBtn = document.getElementById('toggle-theme-btn');
+if (toggleThemeBtn) {
+    toggleThemeBtn.addEventListener('click', toggleTheme);
+}
+
+// Функция для отображения уведомлений
+function showNotification(message, type = 'info', duration = 3000) {
+    // Создаем элемент уведомления
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    
+    // Добавляем уведомление в DOM
+    document.body.appendChild(notification);
+    
+    // Показываем уведомление
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+    
+    // Скрываем и удаляем уведомление через указанное время
+    setTimeout(() => {
+        notification.classList.remove('show');
+        
+        // Ждем окончания анимации и удаляем элемент
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, duration);
+}
+
+// Примечание: Код инициализации сайдбара перенесен в inline-скрипт в HTML файле 

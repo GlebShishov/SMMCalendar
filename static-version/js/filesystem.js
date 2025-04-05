@@ -7,31 +7,96 @@ class FileSystem {
         this.directoryHandles = {}; // Кэш для хэндлов директорий
         
         // Восстанавливаем состояние из localStorage
-        const fsState = localStorage.getItem('filesystem_state');
-        if (fsState) {
-            try {
+        this.restoreState();
+    }
+
+    // Восстановление состояния из localStorage
+    async restoreState() {
+        try {
+            const fsState = localStorage.getItem('filesystem_state');
+            if (fsState) {
                 const state = JSON.parse(fsState);
                 this.isReady = state.isReady || false;
-            } catch (error) {
-                console.error('Ошибка при восстановлении состояния filesystem:', error);
+                
+                // Проверяем, есть ли сохраненный directoryHandle
+                if (window.FileSystemHandle && navigator.storage && navigator.storage.getDirectory) {
+                    const rootHandleToken = localStorage.getItem('filesystem_root_handle');
+                    if (rootHandleToken) {
+                        try {
+                            // Пробуем восстановить доступ к директории из предыдущей сессии
+                            const fileHandles = await navigator.storage.getDirectory();
+                            if (fileHandles) {
+                                const savedHandleId = rootHandleToken;
+                                try {
+                                const handle = await fileHandles.getFileHandle(savedHandleId);
+                                if (handle && handle.kind === 'directory') {
+                                    // Проверяем разрешения
+                                    const permission = await handle.requestPermission({ mode: 'readwrite' });
+                                    if (permission === 'granted') {
+                                        this.rootHandle = handle;
+                                        this.projectsDirectoryHandle = handle;
+                                        this.isReady = true;
+                                        console.log('Восстановлен доступ к директории из предыдущей сессии');
+                                    }
+                                    }
+                                } catch (innerError) {
+                                    console.warn('Не удалось получить хендл файла:', innerError);
+                                    // Очищаем некорректные записи в localStorage
+                                    localStorage.removeItem('filesystem_root_handle');
+                                    this.isReady = false;
+                                }
+                            }
+                        } catch (error) {
+                            console.warn('Не удалось восстановить доступ к директории:', error);
+                            // Очищаем состояние при ошибке безопасности
+                            if (error.name === 'SecurityError') {
+                                console.warn('Ошибка безопасности. Сбрасываем состояние файловой системы');
+                                localStorage.removeItem('filesystem_state');
+                                localStorage.removeItem('filesystem_root_handle');
+                                this.isReady = false;
+                                this.rootHandle = null;
+                                this.projectsDirectoryHandle = null;
+                            }
+                        }
+                    }
+                }
             }
+        } catch (error) {
+            console.error('Ошибка при восстановлении состояния filesystem:', error);
+            // Очищаем состояние при любой критической ошибке
+            localStorage.removeItem('filesystem_state');
+            localStorage.removeItem('filesystem_root_handle');
+            this.isReady = false;
+            this.rootHandle = null;
+            this.projectsDirectoryHandle = null;
         }
     }
 
     async initialize() {
         try {
             // Запрашиваем доступ к директории
-            this.rootHandle = await window.showDirectoryPicker();
+            this.rootHandle = await window.showDirectoryPicker({
+                id: 'smm-calendar-root',
+                mode: 'readwrite',
+                startIn: 'documents'
+            });
             
-            // Проверяем, является ли выбранная директория директорией проектов
-            try {
-                // Проверяем, существует ли папка projects в корне
-                this.projectsDirectoryHandle = await this.rootHandle.getDirectoryHandle('projects', { create: false });
-                console.log('Найдена директория projects в корне');
-            } catch (error) {
-                // Если директории projects нет, значит выбранная директория и есть корень проектов
-                console.log('Выбранная директория является корнем проектов');
+            // Выбранная пользователем директория является корневой директорией проектов
                 this.projectsDirectoryHandle = this.rootHandle;
+            console.log('Выбрана директория для проектов:', this.rootHandle.name);
+            
+            // Запрашиваем постоянный доступ к директории
+            if (this.rootHandle.requestPermission) {
+                try {
+                    const permission = await this.rootHandle.requestPermission({ mode: 'readwrite' });
+                    if (permission !== 'granted') {
+                        console.warn('Не получено разрешение на постоянный доступ к директории');
+                        throw new Error('Отказано в доступе к директории');
+                    }
+                } catch (permError) {
+                    console.error('Ошибка при запросе разрешений:', permError);
+                    throw permError;
+                }
             }
             
             // Устанавливаем флаг готовности
@@ -50,10 +115,11 @@ class FileSystem {
             this.rootHandle = null;
             this.projectsDirectoryHandle = null;
             
-            // Сохраняем состояние
-            this._saveState();
+            // Очищаем состояние при ошибке
+            localStorage.removeItem('filesystem_state');
+            localStorage.removeItem('filesystem_root_handle');
             
-            return false;
+            throw error;
         }
     }
 
@@ -62,11 +128,40 @@ class FileSystem {
         localStorage.setItem('filesystem_state', JSON.stringify({
             isReady: this.isReady
         }));
+
+        // Сохраняем информацию о директории для доступа между сессиями
+        if (this.rootHandle) {
+            try {
+                // Используем уникальный идентификатор директории
+                const handleId = `root-handle-${Date.now()}`;
+                localStorage.setItem('filesystem_root_handle', handleId);
+                
+                // Запрашиваем постоянный доступ к директории
+                if (this.rootHandle.requestPermission) {
+                    this.rootHandle.requestPermission({ mode: 'readwrite' })
+                        .then(permission => {
+                            if (permission === 'granted') {
+                                console.log('Получено постоянное разрешение на доступ к директории');
+                            }
+                        })
+                        .catch(err => {
+                            console.warn('Не удалось получить постоянное разрешение:', err);
+                        });
+                }
+            } catch (error) {
+                console.warn('Не удалось сохранить ссылку на директорию:', error);
+            }
+        }
     }
 
     // Проверка готовности файловой системы
     checkReady() {
         // Возвращаем true только если установлен флаг isReady и есть handle директории проектов
+        return this.isReady && (this.rootHandle !== null) && (this.projectsDirectoryHandle !== null);
+    }
+
+    // Проверка инициализации файловой системы
+    isInitialized() {
         return this.isReady && (this.rootHandle !== null) && (this.projectsDirectoryHandle !== null);
     }
 
@@ -81,16 +176,16 @@ class FileSystem {
             return this.directoryHandles[path];
         }
 
-        // Начинаем с директории проектов
+        // Начинаем с корневой директории проектов
         let currentHandle = this.projectsDirectoryHandle;
         
-        // Если путь пустой или равен 'projects', возвращаем директорию проектов
-        if (!path || path === '' || path === 'projects') {
+        // Если путь пустой, возвращаем корневую директорию
+        if (!path || path === '') {
             this.directoryHandles[path] = currentHandle;
             return currentHandle;
         }
         
-        // Если путь начинается с 'projects/', удаляем префикс
+        // Удаляем префикс 'projects/' если он есть (для обратной совместимости)
         if (path.startsWith('projects/')) {
             path = path.substring(9);
         }
@@ -240,15 +335,50 @@ class FileSystem {
 
     // Загрузка данных проекта
     async loadProjectData(projectId) {
-        if (!this.checkReady()) {
-            throw new Error('Filesystem не инициализирован. Пожалуйста, выберите рабочую директорию.');
-        }
-        
         try {
             console.log(`Загрузка данных проекта ${projectId}...`);
             
+            // Проверяем, инициализирована ли файловая система
+            if (!this.checkReady()) {
+                console.log('Файловая система не инициализирована, пробуем локальное хранилище');
+                // Загружаем из localStorage
+                return this.loadProjectFromLocalStorage(projectId);
+            }
+            
+            // Сначала проверяем, есть ли проект в списке проектов в projects.json
+            let projectInfo = null;
+            try {
+                // Пытаемся получить файл projects.json из корневой директории
+                const projectsFileHandle = await this.rootHandle.getFileHandle('projects.json');
+                const projectsFile = await projectsFileHandle.getFile();
+                const projectsData = await projectsFile.text();
+                
+                try {
+                    const projectsList = JSON.parse(projectsData);
+                    // Ищем проект по ID
+                    projectInfo = projectsList.find(project => project.id === projectId);
+                    
+                    if (projectInfo) {
+                        console.log(`Проект ${projectId} найден в списке проектов:`, projectInfo);
+                    } else {
+                        console.log(`Проект ${projectId} не найден в списке projects.json`);
+                    }
+                } catch (error) {
+                    console.error('Ошибка при разборе projects.json:', error);
+                }
+            } catch (error) {
+                console.log('Файл projects.json не найден или недоступен, продолжаем без него');
+            }
+            
             // Директория проекта
-            const projectDir = await this.getDirectory(projectId);
+            let projectDir;
+            try {
+                projectDir = await this.getDirectory(projectId);
+            } catch (error) {
+                console.error(`Не удалось получить директорию проекта ${projectId}:`, error);
+                console.log('Создаем демо-проект из-за ошибки доступа к директории');
+                return this.createDemoProject(projectId);
+            }
             
             // Директория с днями
             let daysDir;
@@ -256,31 +386,59 @@ class FileSystem {
                 daysDir = await projectDir.getDirectoryHandle('days', { create: true });
             } catch (error) {
                 console.error(`Не удалось получить или создать директорию дней для проекта ${projectId}:`, error);
-                throw error;
+                console.log('Создаем демо-проект из-за ошибки доступа к директории дней');
+                return this.createDemoProject(projectId);
+            }
+            
+            // Загружаем мета-данные проекта
+            // Если у нас есть информация из projects.json, используем ее
+            let projectTitle = projectInfo?.title || `Проект ${projectId}`;
+            let projectDescription = projectInfo?.description || 'Календарь публикаций для социальных сетей';
+            
+            // Дополнительно проверяем meta.json в директории проекта
+            try {
+                const metaFileHandle = await projectDir.getFileHandle('meta.json');
+                const metaFile = await metaFileHandle.getFile();
+                const metaData = await metaFile.text();
+                
+                try {
+                    const meta = JSON.parse(metaData);
+                    // Если есть данные в meta.json, они имеют приоритет
+                    projectTitle = meta.name || meta.title || projectTitle;
+                    projectDescription = meta.description || projectDescription;
+                    console.log(`Загружены мета-данные проекта ${projectId} из meta.json:`, meta);
+                } catch (error) {
+                    console.error(`Ошибка при разборе meta.json для проекта ${projectId}:`, error);
+                }
+            } catch (error) {
+                console.log(`Файл meta.json не найден для проекта ${projectId}, используем значения из projects.json или по умолчанию`);
             }
             
             // Создаем объект проекта
             const project = {
                 id: projectId,
-                title: `Проект ${projectId}`,
-                description: 'Календарь публикаций для социальных сетей',
-                days: {}
+                title: projectTitle,
+                description: projectDescription,
+                days: {},
+                order: { days: [] }
             };
-            
-            // Список дней из order.json
-            let days = [];
             
             // Получаем список всех файлов в директории дней
             const daysEntries = [];
-            for await (const entry of daysDir.values()) {
-                if (entry.kind === 'file' && entry.name.endsWith('.json')) {
-                    const dayId = entry.name.replace('.json', '');
-                    daysEntries.push(dayId);
-                    console.log(`Найден день: ${dayId}`);
+            try {
+                for await (const entry of daysDir.values()) {
+                    if (entry.kind === 'file' && entry.name.endsWith('.json')) {
+                        const dayId = entry.name.replace('.json', '');
+                        daysEntries.push(dayId);
+                        console.log(`Найден день в папке days: ${dayId}`);
+                    }
                 }
+            } catch (error) {
+                console.error(`Ошибка при чтении директории дней для проекта ${projectId}:`, error);
             }
             
             // Пытаемся прочитать order.json
+            let orderDays = [];
             try {
                 const orderFileHandle = await projectDir.getFileHandle('order.json');
                 const orderFile = await orderFileHandle.getFile();
@@ -288,116 +446,111 @@ class FileSystem {
                 
                 try {
                     const order = JSON.parse(orderData);
-                    days = order.days || [];
-                    console.log(`Прочитан порядок дней из order.json: ${days.join(', ')}`);
+                    orderDays = order.days || [];
+                    console.log(`Прочитан порядок дней из order.json: ${orderDays.join(', ')}`);
                 } catch (error) {
                     console.error('Ошибка при разборе order.json:', error);
                 }
             } catch (error) {
                 console.log('Файл order.json не найден, будем использовать дни из директории');
-                days = daysEntries;
             }
             
-            // Проверяем соответствие списка дней из order.json и файлов в директории
-            // Если в order.json есть дни, которых нет на диске, удаляем их из списка
-            const validDays = days.filter(dayId => daysEntries.includes(dayId));
-            
-            // Проверяем, есть ли дни на диске, которых нет в order.json
-            const missingDays = daysEntries.filter(dayId => !days.includes(dayId));
-            if (missingDays.length > 0) {
-                console.log(`Найдены дни на диске, которых нет в order.json: ${missingDays.join(', ')}`);
-                validDays.push(...missingDays);
-            }
-            
-            // Используем обновленный список дней
-            days = validDays;
-            
-            // Если из order.json не получили ни одного дня, используем дни из директории
-            if (days.length === 0 && daysEntries.length > 0) {
-                days = [...daysEntries];
-                console.log(`Используем дни из директории: ${days.join(', ')}`);
-            }
-            
-            // Сортируем дни по номеру
-            days.sort((a, b) => {
-                const numA = parseInt(a.replace('day_', ''), 10);
-                const numB = parseInt(b.replace('day_', ''), 10);
-                return numA - numB;
-            });
-            
-            console.log(`Отсортированный список дней: ${days.join(', ')}`);
-            
-            // Сохраняем порядок дней в order.json, если он отличается или отсутствует
-            try {
-                const orderFileHandle = await projectDir.getFileHandle('order.json', { create: true });
-                const writable = await orderFileHandle.createWritable();
-                await writable.write(JSON.stringify({ days }, null, 2));
-                await writable.close();
-                console.log(`Сохранен обновленный порядок дней в order.json`);
-            } catch (error) {
-                console.error('Ошибка при сохранении order.json:', error);
-            }
-            
-            // Загружаем данные для каждого дня
-            for (const dayId of days) {
-                try {
-                    const dayFileHandle = await daysDir.getFileHandle(`${dayId}.json`);
-                    const dayFile = await dayFileHandle.getFile();
-                    const dayData = await dayFile.text();
-                    
+            // Загружаем данные для каждого дня из папки days
+            if (daysEntries.length > 0) {
+                for (const dayId of daysEntries) {
                     try {
-                        project.days[dayId] = JSON.parse(dayData);
-                        console.log(`Загружены данные дня ${dayId}`);
+                        const dayFileHandle = await daysDir.getFileHandle(`${dayId}.json`);
+                        const dayFile = await dayFileHandle.getFile();
+                        const dayData = await dayFile.text();
+                        
+                        try {
+                            const dayObj = JSON.parse(dayData);
+                            
+                            // Проверяем и обеспечиваем правильную структуру дня
+                            if (!dayObj.posts) {
+                                dayObj.posts = [];
+                            }
+                            
+                            // Если нет даты, добавляем текущую
+                            if (!dayObj.date) {
+                                dayObj.date = new Date().toISOString().split('T')[0];
+                            }
+                            
+                            // Добавляем день в проект
+                            project.days[dayId] = dayObj;
+                            console.log(`Загружены данные дня ${dayId}`);
+                        } catch (error) {
+                            console.error(`Ошибка при разборе JSON дня ${dayId}:`, error);
+                        }
                     } catch (error) {
-                        console.error(`Ошибка при разборе JSON дня ${dayId}:`, error);
+                        console.error(`Ошибка при чтении файла дня ${dayId}:`, error);
                     }
+                }
+            } else {
+                // Если в папке days нет дней, создаем day_1
+                console.log('В папке days нет дней, создаем день day_1');
+                try {
+                    const day1Id = 'day_1';
+                    const day1 = {
+                        date: new Date().toISOString().split('T')[0],
+                        posts: [{
+                            socialNetwork: 'Telegram',
+                            contentType: 'Пост',
+                            images: [],
+                            text: '',
+                            created: new Date().toISOString(),
+                            lastModified: new Date().toISOString()
+                        }]
+                    };
+                    
+                    // Сохраняем день в файловую систему
+                    const dayFileHandle = await daysDir.getFileHandle(`${day1Id}.json`, { create: true });
+                    const writable = await dayFileHandle.createWritable();
+                    await writable.write(JSON.stringify(day1, null, 2));
+                    await writable.close();
+                    
+                    // Добавляем день в проект
+                    project.days[day1Id] = day1;
+                    orderDays.push(day1Id);
+                    
+                    console.log(`Создан день ${day1Id} в папке days`);
                 } catch (error) {
-                    console.error(`Ошибка при чтении файла дня ${dayId}:`, error);
+                    console.error('Ошибка при создании day_1:', error);
                 }
             }
             
-            // Сохраняем список дней в проекте для упрощения доступа
-            project.order = { days };
+            // Формируем итоговый порядок дней
+            // Сначала фильтруем order.json, оставляя только существующие дни
+            const validOrderDays = orderDays.filter(dayId => dayId in project.days);
             
-            // Если в проекте нет дней, создаем первый день
-            if (Object.keys(project.days).length === 0) {
-                console.log(`В проекте нет дней, создаем первый день`);
-                
-                const dayId = 'day_1'; // Начинаем с day_1 вместо day_0
-                
-                // Создаем новый день
-                const newDay = {
-                    date: new Date().toISOString().split('T')[0],
-                    posts: [{
-                        socialNetwork: 'Telegram',
-                        contentType: 'Пост',
-                        images: [],
-                        text: '',
-                        created: new Date().toISOString(),
-                        lastModified: new Date().toISOString()
-                    }]
-                };
-                
-                // Сохраняем файл дня
+            // Добавляем дни, которые есть в проекте, но отсутствуют в order.json
+            const missingDays = Object.keys(project.days).filter(dayId => !validOrderDays.includes(dayId));
+            
+            if (missingDays.length > 0) {
+                console.log(`Найдены дни, отсутствующие в order.json: ${missingDays.join(', ')}`);
+                validOrderDays.push(...missingDays);
+            }
+            
+            // Сортируем дни по номеру для лучшей презентации
+            validOrderDays.sort((a, b) => {
+                const numA = parseInt(a.replace('day_', ''), 10) || 0;
+                const numB = parseInt(b.replace('day_', ''), 10) || 0;
+                return numA - numB;
+            });
+            
+            // Сохраняем итоговый порядок дней
+            project.order.days = validOrderDays;
+            
+            // Сохраняем порядок дней в order.json, если он отличается или order.json отсутствует
+            if (JSON.stringify(orderDays) !== JSON.stringify(validOrderDays)) {
                 try {
-                    const dayFileHandle = await daysDir.getFileHandle(`${dayId}.json`, { create: true });
-                    const writable = await dayFileHandle.createWritable();
-                    await writable.write(JSON.stringify(newDay, null, 2));
-                    await writable.close();
-                    console.log(`Создан первый день ${dayId}`);
-                    
-                    // Обновляем order.json
                     const orderFileHandle = await projectDir.getFileHandle('order.json', { create: true });
-                    const orderWritable = await orderFileHandle.createWritable();
-                    await orderWritable.write(JSON.stringify({ days: [dayId] }, null, 2));
-                    await orderWritable.close();
-                    console.log(`Обновлен order.json с первым днем`);
-                    
-                    // Добавляем день в проект
-                    project.days[dayId] = newDay;
-                    project.order = { days: [dayId] };
+                    const writable = await orderFileHandle.createWritable();
+                    await writable.write(JSON.stringify({ days: validOrderDays }, null, 2));
+                    await writable.close();
+                    console.log(`Сохранен обновленный порядок дней в order.json: ${validOrderDays.join(', ')}`);
                 } catch (error) {
-                    console.error(`Ошибка при создании первого дня для проекта ${projectId}:`, error);
+                    console.error('Ошибка при сохранении order.json:', error);
                 }
             }
             
@@ -405,8 +558,157 @@ class FileSystem {
             return project;
         } catch (error) {
             console.error(`Ошибка при загрузке данных проекта ${projectId}:`, error);
-            throw error;
+            
+            // В случае ошибки, пробуем создать демо-проект
+            console.log('Создаем демо-проект из-за ошибки загрузки');
+            return this.createDemoProject(projectId);
         }
+    }
+    
+    // Загрузка проекта из localStorage
+    loadProjectFromLocalStorage(projectId) {
+        console.log(`Загрузка проекта ${projectId} из localStorage`);
+        
+        // Формируем проект
+        const project = {
+            id: projectId,
+            title: `Проект ${projectId}`,
+            description: 'Календарь публикаций для социальных сетей',
+            days: {},
+            order: { days: [] }
+        };
+        
+        // Загружаем дни из localStorage
+        const prefix = `project_${projectId}_day_`;
+        const dayIds = [];
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(prefix)) {
+                try {
+                    const dayId = key.replace(prefix, '');
+                    
+                    // Пробуем загрузить данные дня
+                    const dayDataString = localStorage.getItem(key);
+                    if (dayDataString) {
+                        const dayData = JSON.parse(dayDataString);
+                        
+                        // Добавляем день в проект только если есть валидные данные
+                        if (dayData) {
+                            dayIds.push(dayId);
+                            project.days[dayId] = dayData;
+                            console.log(`Загружен день ${dayId} из localStorage`);
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Ошибка при загрузке дня из localStorage: ${key}`, error);
+                }
+            }
+        }
+        
+        // Пробуем загрузить порядок дней
+        try {
+            const orderKey = `project_${projectId}_order`;
+            const orderString = localStorage.getItem(orderKey);
+            if (orderString) {
+                const order = JSON.parse(orderString);
+                if (order && order.days) {
+                    // Фильтруем только те дни, которые действительно загрузились
+                    project.order.days = order.days.filter(dayId => project.days[dayId]);
+                    console.log(`Загружен порядок дней из localStorage: ${project.order.days.join(', ')}`);
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке порядка дней из localStorage:', error);
+        }
+        
+        // Если порядок дней пуст, используем все найденные дни
+        if (project.order.days.length === 0 && dayIds.length > 0) {
+            // Упорядочиваем дни по номеру
+            dayIds.sort((a, b) => {
+                const numA = parseInt(a.replace('day_', ''), 10) || 0;
+                const numB = parseInt(b.replace('day_', ''), 10) || 0;
+                return numA - numB;
+            });
+            
+            project.order.days = dayIds;
+            console.log(`Порядок дней создан на основе найденных дней: ${dayIds.join(', ')}`);
+        }
+        
+        // Если дней нет вообще, создаем day_1
+        if (Object.keys(project.days).length === 0) {
+            console.log('Нет дней в localStorage, создаем день day_1');
+            const day1Id = 'day_1';
+            const day1 = {
+                date: new Date().toISOString().split('T')[0],
+                posts: [{
+                    socialNetwork: 'Telegram',
+                    contentType: 'Пост',
+                    images: [],
+                    text: '',
+                    created: new Date().toISOString(),
+                    lastModified: new Date().toISOString()
+                }]
+            };
+            
+            // Добавляем день в проект
+            project.days[day1Id] = day1;
+            project.order.days = [day1Id];
+            
+            // Сохраняем в localStorage
+            localStorage.setItem(`project_${projectId}_day_${day1Id}`, JSON.stringify(day1));
+            localStorage.setItem(`project_${projectId}_order`, JSON.stringify({days: [day1Id]}));
+            console.log(`Создан день ${day1Id} в localStorage`);
+        }
+        
+        console.log(`Проект ${projectId} загружен из localStorage:`, project);
+        return project;
+    }
+
+    // Создание демо-проекта
+    createDemoProject(projectId) {
+        console.log(`Создание демо-проекта для ${projectId}`);
+        
+        // Базовая структура проекта
+        const project = {
+            id: projectId,
+            title: `Проект ${projectId}`,
+            description: 'Демонстрационный проект',
+            days: {},
+            order: { days: [] }
+        };
+        
+        // Создаем только 1 день с примером поста
+        const day1Id = 'day_1';
+        
+        // Пример поста для первого дня
+        const day1 = {
+                    date: new Date().toISOString().split('T')[0],
+                    posts: [{
+                        socialNetwork: 'Telegram',
+                        contentType: 'Пост',
+                        images: [],
+                text: 'Это пример поста для демонстрации функционала календаря SMM публикаций.',
+                        created: new Date().toISOString(),
+                        lastModified: new Date().toISOString()
+                    }]
+                };
+                    
+                    // Добавляем день в проект
+        project.days[day1Id] = day1;
+        project.order.days = [day1Id];
+        
+        // Сохраняем в localStorage для возможности повторного использования
+        try {
+            localStorage.setItem(`project_${projectId}_day_${day1Id}`, JSON.stringify(day1));
+            // Сохраняем порядок дней
+            localStorage.setItem(`project_${projectId}_order`, JSON.stringify({days: [day1Id]}));
+            console.log('Демо-проект сохранен в localStorage');
+                } catch (error) {
+            console.warn('Не удалось сохранить демо-проект в localStorage:', error);
+            }
+            
+            return project;
     }
     
     // Загрузка из localStorage (для обратной совместимости)
@@ -568,28 +870,69 @@ class FileSystem {
     }
 
     // Сохранение изображения
-    async saveImage(projectId, imageFile) {
+    async saveImage(projectId, file) {
+        try {
+            // Проверяем инициализацию
+            if (!this.isInitialized() && !this.checkReady()) {
+                // В демо-режиме создаем имитацию пути к файлу и сохраняем в localStorage
+                console.log('Filesystem не инициализирован, используем демо-режим для сохранения изображения');
+                
+                // Генерируем уникальный идентификатор для изображения
+                const timestamp = Date.now();
+                const randomString = Math.random().toString(36).substring(2, 8);
+                const imagePath = `images/${timestamp}_${randomString}_${file.name}`;
+                
+                // Создаем URL для изображения
+                const url = URL.createObjectURL(file);
+                
+                // Сохраняем изображение в localStorage
+                try {
+                    // Сохраняем URL в localStorage
+                    localStorage.setItem(`demo_image_${imagePath}`, url);
+                    
+                    // Сохраняем информацию о проекте и изображении
+                    const imagesKey = `project_${projectId}_images`;
+                    let images = [];
+                    try {
+                        const savedImages = localStorage.getItem(imagesKey);
+                        if (savedImages) {
+                            images = JSON.parse(savedImages);
+                        }
+                    } catch (e) {
+                        console.warn('Ошибка при загрузке списка изображений из localStorage:', e);
+                    }
+                    
+                    // Добавляем новое изображение в список
+                    images.push({ path: imagePath, url: url, projectId: projectId });
+                    localStorage.setItem(imagesKey, JSON.stringify(images));
+                    
+                    return imagePath;
+                } catch (error) {
+                    console.error('Ошибка при сохранении изображения в localStorage:', error);
+                    throw new Error('Не удалось сохранить изображение в демо-режиме');
+                }
+            }
+            
+            // Стандартный режим сохранения через файловую систему
+            // Проверяем инициализацию
         if (!this.checkReady()) {
             throw new Error('Filesystem не инициализирован. Пожалуйста, выберите рабочую директорию.');
         }
         
-        try {
-            // Создаем директорию для изображений
-            await this.getDirectory(`${projectId}/images`);
+            // Получаем директорию для изображений
+            const imagesDir = await this.getDirectory(`${projectId}/images`);
             
             // Генерируем уникальное имя файла
-            const fileName = `img_${Date.now()}_${imageFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+            const timestamp = Date.now();
+            const fileName = `${timestamp}_${file.name.replace(/\s+/g, '_')}`;
             
-            // Путь к файлу изображения
-            const imagePath = `${projectId}/images/${fileName}`;
+            // Создаем файл в директории изображений
+            const fileHandle = await imagesDir.getFileHandle(fileName, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(file);
+            await writable.close();
             
-            // Сжимаем изображение
-            const compressedImage = await this.compressImage(imageFile);
-            
-            // Сохраняем изображение
-            await this.writeFile(imagePath, compressedImage);
-            
-            // Возвращаем путь к изображению для сохранения в дне
+            // Возвращаем путь к файлу
             return `images/${fileName}`;
         } catch (error) {
             console.error('Ошибка при сохранении изображения:', error);
@@ -597,31 +940,60 @@ class FileSystem {
         }
     }
 
-    // Получение изображения
+    // Получение URL изображения
     async getImage(projectId, imagePath) {
-        if (!this.checkReady()) {
-            throw new Error('Filesystem не инициализирован. Пожалуйста, выберите рабочую директорию.');
-        }
-        
         try {
-            // Путь к файлу изображения
-            const fullPath = `${projectId}/${imagePath}`;
-            
-            // Читаем файл изображения
-            const imageFile = await this.readFile(fullPath);
-            
-            if (imageFile) {
-                // Если изображение получено как Blob, создаем URL для него
-                if (imageFile instanceof Blob) {
-                    return URL.createObjectURL(imageFile);
+            // Проверяем, используется ли демо-режим
+            if (!this.isInitialized() && !this.checkReady()) {
+                console.log('Filesystem не инициализирован, используем демо-режим для загрузки изображения');
+                
+                // Проверяем сохраненное изображение в localStorage
+                const imageUrl = localStorage.getItem(`demo_image_${imagePath}`);
+                if (imageUrl) {
+                    return imageUrl;
                 }
-                return imageFile;
+                
+                // Проверяем в списке изображений
+                const imagesKey = `project_${projectId}_images`;
+                let images = [];
+                try {
+                    const savedImages = localStorage.getItem(imagesKey);
+                    if (savedImages) {
+                        images = JSON.parse(savedImages);
+                        const image = images.find(img => img.path === imagePath);
+                        if (image && image.url) {
+                            return image.url;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Ошибка при загрузке списка изображений из localStorage:', e);
+                }
+                
+                // Если изображение не найдено, возвращаем плейсхолдер
+                return 'https://via.placeholder.com/150?text=Demo+Image';
             }
             
-            return null;
+            // Проверяем инициализацию
+            if (!this.checkReady()) {
+                throw new Error('Filesystem не инициализирован. Пожалуйста, выберите рабочую директорию.');
+            }
+            
+            // Получаем путь к файлу
+            const parts = imagePath.split('/');
+            const fileName = parts.pop();
+            const dirPath = parts.join('/');
+            
+            // Получаем директорию и файл
+            const dirHandle = await this.getDirectory(`${projectId}/${dirPath}`);
+            const fileHandle = await dirHandle.getFileHandle(fileName);
+            const file = await fileHandle.getFile();
+            
+            // Возвращаем URL файла
+            return URL.createObjectURL(file);
         } catch (error) {
             console.error('Ошибка при получении изображения:', error);
-            return null;
+            // Возвращаем плейсхолдер в случае ошибки
+            return 'https://via.placeholder.com/150?text=Error';
         }
     }
 
@@ -706,14 +1078,16 @@ class FileSystem {
         }
         
         try {
-            // Получаем список проектов (поддиректорий) из директории проектов
+            // Получаем список проектов (поддиректорий) из выбранной пользователем директории
             const projects = [];
+            
+            console.log('Анализируем директорию для поиска проектов:', this.projectsDirectoryHandle.name);
             
             for await (const entry of this.projectsDirectoryHandle.values()) {
                 if (entry.kind === 'directory') {
                     const projectId = entry.name;
                     
-                    // Проверяем, есть ли в директории проекта meta.json или days
+                    // Проверяем структуру директории на соответствие проекту
                     let isProject = false;
                     let projectName = projectId;
                     let projectDescription = '';
@@ -721,7 +1095,9 @@ class FileSystem {
                     let projectLastModified = new Date().toISOString();
                     
                     try {
-                        // Проверяем наличие meta.json
+                        console.log(`Проверяем директорию ${projectId} на наличие проекта`);
+                        
+                        // Сначала проверяем наличие meta.json
                         try {
                             const metaFileHandle = await entry.getFileHandle('meta.json');
                             const metaFile = await metaFileHandle.getFile();
@@ -734,20 +1110,47 @@ class FileSystem {
                                 projectCreated = meta.created || projectCreated;
                                 projectLastModified = meta.lastModified || projectLastModified;
                                 isProject = true;
+                                console.log(`Директория ${projectId} содержит meta.json, это проект`);
                             } catch (error) {
-                                console.error(`Ошибка при разборе meta.json для проекта ${projectId}:`, error);
+                                console.warn(`Ошибка при разборе meta.json для проекта ${projectId}:`, error);
                             }
                         } catch (error) {
-                            // Нет meta.json, проверяем наличие директории days
+                            console.log(`В директории ${projectId} не найден meta.json`);
+                            
+                            // Нет meta.json, проверяем наличие директории days или файлов календаря
                             try {
+                                // Проверяем наличие директории days
                                 await entry.getDirectoryHandle('days');
                                 isProject = true;
+                                console.log(`Директория ${projectId} содержит папку days, это проект`);
                             } catch (daysError) {
-                                // Нет директории days, не считаем директорию проектом
+                                // Проверяем наличие других признаков проекта (например, order.json)
+                                try {
+                                    await entry.getFileHandle('order.json');
+                                    isProject = true;
+                                    console.log(`Директория ${projectId} содержит order.json, это проект`);
+                                } catch (orderError) {
+                                    // Проверяем содержимое директории на наличие файлов .json
+                                    let hasJsonFiles = false;
+                                    for await (const subEntry of entry.values()) {
+                                        if (subEntry.kind === 'file' && subEntry.name.endsWith('.json')) {
+                                            hasJsonFiles = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if (hasJsonFiles) {
+                                        isProject = true;
+                                        console.log(`Директория ${projectId} содержит JSON файлы, это потенциальный проект`);
+                                    } else {
+                                        console.log(`Директория ${projectId} не похожа на проект`);
+                                    }
+                                }
                             }
                         }
                         
                         if (isProject) {
+                            console.log(`Добавляем проект ${projectId} в список проектов`);
                             projects.push({
                                 id: projectId,
                                 name: projectName,
@@ -762,16 +1165,18 @@ class FileSystem {
                 }
             }
             
-            // Если нет проектов, добавляем дефолтный проект
+            console.log(`Найдено проектов: ${projects.length}`);
+            
+            // Если нет проектов, создаем дефолтный проект только при необходимости
             if (projects.length === 0) {
-                // Создаем дефолтный проект agarto-test
+                console.log('Проекты не найдены, спрашиваем пользователя о создании тестового проекта');
+                if (confirm('В выбранной директории не найдено проектов. Создать тестовый проект?')) {
                 const projectId = 'agarto-test';
                 const projectDir = await this.getDirectory(projectId);
-                const daysDir = await projectDir.getDirectoryHandle('days', { create: true });
                 
                 // Создаем meta.json
                 const meta = {
-                    name: 'Agarto Test',
+                        name: 'Тестовый проект',
                     description: 'Тестовый проект для демонстрации',
                     created: new Date().toISOString(),
                     lastModified: new Date().toISOString()
@@ -781,6 +1186,9 @@ class FileSystem {
                 const metaWritable = await metaFileHandle.createWritable();
                 await metaWritable.write(JSON.stringify(meta, null, 2));
                 await metaWritable.close();
+                    
+                    // Создаем директорию days
+                    await this.getDirectory(`${projectId}/days`);
                 
                 projects.push({
                     id: projectId,
@@ -789,6 +1197,9 @@ class FileSystem {
                     created: meta.created,
                     lastModified: meta.lastModified
                 });
+                    
+                    console.log('Создан тестовый проект:', projectId);
+                }
             }
             
             return projects;
@@ -973,6 +1384,32 @@ class FileSystem {
         } catch (error) {
             console.error('Ошибка при создании директории:', error);
             return null;
+        }
+    }
+
+    // Обновление порядка дней в order.json
+    async updateOrderJson(projectId, daysOrder) {
+        try {
+            if (!this.checkReady()) {
+                throw new Error('Файловая система не инициализирована');
+            }
+            
+            console.log(`Обновление order.json для проекта ${projectId}...`);
+            
+            // Получаем директорию проекта
+            const projectDir = await this.getDirectory(projectId);
+            
+            // Обновляем файл order.json
+            const orderFileHandle = await projectDir.getFileHandle('order.json', { create: true });
+            const writable = await orderFileHandle.createWritable();
+            await writable.write(JSON.stringify({ days: daysOrder }, null, 2));
+            await writable.close();
+            
+            console.log(`Успешно обновлен order.json для проекта ${projectId}`);
+            return true;
+        } catch (error) {
+            console.error(`Ошибка при обновлении order.json для проекта ${projectId}:`, error);
+            throw error;
         }
     }
 }

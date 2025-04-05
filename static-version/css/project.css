@@ -1,10 +1,25 @@
 /* Импортируем файл с переменными */
 @import url('variables.css');
 
+/* Добавляем класс для визуально скрытых элементов (для доступности) */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
 /* Стили для контейнера календаря */
 #calendar {
     width: 100%;
     overflow-x: auto;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding-bottom: 20px;
 }
 
 /* Контейнер для дней */
@@ -132,16 +147,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-sm);
-    border-bottom: var(--border-width-thin) var(--border-style-solid) var(--color-gray-100);
-    padding-bottom: var(--space-sm);
+    padding: 8px 10px;
+    background-color: var(--card-background);
+    border-bottom: 1px solid var(--border-color);
 }
 
 /* Выпадающие списки */
-.network-dropdown, .content-type-dropdown {
+.network-selector, .content-type-selector {
     position: relative;
     cursor: pointer;
-    user-select: none;
 }
 
 /* Иконка социальной сети */
@@ -189,14 +203,12 @@
 
 /* Отображение социальной сети */
 .network-display {
-    background-color: var(--color-blue-light);
-    color: var(--color-blue);
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    min-width: 80px;
-    text-align: center;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: var(--light-background);
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .network-display:hover {
@@ -205,12 +217,12 @@
 
 /* Отображение типа контента */
 .content-type-display {
-    padding: var(--space-xs) var(--space-sm);
-    background-color: var(--color-gray-100);
-    border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-sm);
-    min-width: 80px;
-    text-align: center;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: var(--light-background);
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .content-type-display:hover {
@@ -221,57 +233,53 @@
 .dropdown-content {
     display: none;
     position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: var(--z-index-dropdown);
-    background-color: var(--bg-primary);
-    min-width: 150px;
-    box-shadow: var(--shadow-md);
-    border-radius: var(--border-radius-md);
-    padding: var(--space-xs) 0;
+    min-width: 160px;
+    background-color: var(--card-background);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
 }
 
-.dropdown-content.active {
+.dropdown-content.show {
     display: block;
 }
 
 /* Элементы выпадающего списка */
 .dropdown-item {
-    padding: var(--space-xs) var(--space-md);
-    display: flex;
-    align-items: center;
-    gap: var(--gap-sm);
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .dropdown-item:hover {
-    background-color: var(--color-gray-100);
+    background-color: var(--hover-background);
 }
 
 /* Кнопка удаления поста */
 .delete-post-btn {
     background-color: transparent;
-    color: var(--text-muted);
+    color: var(--danger-color);
     border: none;
-    border-radius: var(--border-radius-circle);
-    width: 24px;
-    height: 24px;
     cursor: pointer;
-    transition: all var(--transition-speed-fast);
-    padding: 0;
+    font-size: 18px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
 }
 
 .delete-post-btn:hover {
-    background-color: var(--color-danger);
-    color: var(--text-light);
+    background-color: var(--danger-background);
 }
 
 /* Контейнер для изображений */
 .images-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--gap-sm);
     margin: var(--space-md) 0;
 }
@@ -281,17 +289,17 @@
     position: relative;
     overflow: hidden;
     border-radius: var(--border-radius-sm);
-    height: 100px;
     background-color: var(--color-gray-100);
     cursor: pointer;
+    transition: aspect-ratio 0.3s ease;
 }
 
 /* Само изображение */
 .image-preview img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    transition: transform var(--transition-speed-fast);
+    object-fit: contain;
+    transition: transform var(--transition-speed-fast), max-width 0.3s ease, max-height 0.3s ease;
     object-position: center;
     display: block;
 }
@@ -369,7 +377,7 @@
 /* Панели инструментов для редактора и изображений */
 .editor-tools-panel, .images-tools-panel {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-Start;
     gap: var(--gap-sm);
     margin-bottom: var(--space-sm);
     padding-bottom: var(--space-sm);
@@ -381,7 +389,7 @@
     color: var(--text-secondary);
     border: none;
     border-radius: var(--border-radius-sm);
-    width: 36px;
+    width: 100%;
     height: 36px;
     display: flex;
     align-items: center;
@@ -401,85 +409,69 @@
 
 /* Подвал сайдбара */
 .sidebar-footer {
-    margin-top: auto;
     padding: var(--space-md);
     border-top: var(--border-width-thin) var(--border-style-solid) var(--border-color);
+    margin-top: auto;
 }
 
-/* Кнопки в подвале сайдбара */
 .sidebar-footer-buttons {
     display: flex;
     flex-direction: column;
-    gap: var(--gap-sm);
+    gap: var(--space-sm);
 }
 
 /* Кнопка сайдбара */
 .sidebar-button {
     display: flex;
     align-items: center;
-    gap: var(--gap-sm);
-    background-color: var(--color-gray-100);
-    color: var(--text-primary);
-    border: none;
-    border-radius: var(--border-radius-md);
     padding: var(--space-sm) var(--space-md);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
+    background-color: transparent;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    color: var(--text-secondary);
     cursor: pointer;
-    transition: all var(--transition-speed-fast);
+    transition: background-color var(--transition-speed-fast);
+    width: 100%;
     text-align: left;
 }
 
 .sidebar-button:hover {
-    background-color: var(--color-primary);
-    color: var(--text-light);
+    background-color: var(--bg-hover);
 }
 
 .sidebar-button i {
-    font-size: var(--font-size-base);
-    width: 20px;
-}
-
-/* Стили для сетки изображений */
-.images-container {
-    margin-top: var(--space-xs);
-}
-
-/* Кнопка добавления поста */
-.add-post-btn {
-    background-color: var(--color-gray-100);
-    border: var(--border-width-thin) var(--border-style-dashed) var(--border-color);
-    border-radius: var(--border-radius-md);
-    padding: var(--space-md);
+    width: 24px;
+    height: 24px;
+    margin-right: var(--space-sm);
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
+}
+
+/* Кнопка добавления изображения */
+.add-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    aspect-ratio: 1/1;
+}
+
+.add-image-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius-circle);
+    background-color: var(--color-primary);
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all var(--transition-speed-fast);
 }
 
-.add-post-btn:hover {
-    background-color: var(--color-gray-200);
-}
-
-/* Кнопка добавления дня */
-.add-day-btn {
-    background-color: var(--color-gray-100);
-    border: var(--border-width-thin) var(--border-style-dashed) var(--border-color);
-    border-radius: var(--border-radius-md);
-    padding: var(--space-lg);
-    min-width: var(--day-column-width);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    transition: all var(--transition-speed-fast);
-    margin-right: var(--space-lg);
-}
-
-.add-day-btn:hover {
-    background-color: var(--color-gray-200);
+.add-image:hover .add-image-icon {
+    transform: scale(1.1);
+    background-color: var(--color-primary-hover);
 }
 
 /* Сообщение об ошибке */
@@ -752,45 +744,68 @@ textarea.form-control {
 /* Стили для сайдбара */
 .sidebar {
     width: var(--sidebar-width);
-    min-width: var(--sidebar-width);
+    min-width: var(--sidebar-min-width);
     height: 100vh;
     background-color: var(--bg-sidebar);
     border-right: var(--border-width-thin) var(--border-style-solid) var(--border-color);
     position: fixed;
     left: 0;
     top: 0;
-    overflow-y: auto;
-    transition: transform var(--transition-speed-normal);
     z-index: var(--z-index-sidebar);
+    transition: width var(--transition-speed-normal), min-width var(--transition-speed-normal);
+    display: flex;
+    flex-direction: column;
 }
 
 /* Состояние скрытого сайдбара */
 .sidebar.collapsed {
-    transform: translateX(calc(-1 * var(--sidebar-width) + 30px));
+    width: var(--sidebar-collapsed-width);
+    min-width: var(--sidebar-collapsed-width);
 }
 
-/* Содержимое сайдбара */
+/* Контент сайдбара */
 .sidebar-content {
-    padding: var(--space-md);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
 }
 
-/* Заголовок сайдбара */
+/* Хедер сайдбара */
 .sidebar-header {
-    margin-bottom: var(--space-lg);
+    padding: var(--space-md);
+    border-bottom: var(--border-width-thin) var(--border-style-solid) var(--border-color);
+    position: relative;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.sidebar-title {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--text-primary);
-    margin: 0;
+/* Кнопка сворачивания/разворачивания сайдбара */
+.toggle-sidebar-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--border-radius-circle);
+    background-color: var(--bg-primary);
+    border: var(--border-width-thin) var(--border-style-solid) var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform var(--transition-speed-normal);
 }
 
-/* Меню в сайдбаре */
+.sidebar.collapsed .toggle-sidebar-btn {
+    transform: rotate(180deg);
+}
+
+/* Ссылки в сайдбаре */
 .sidebar-menu {
-    list-style: none;
+    list-style-type: none;
     padding: 0;
-    margin: 0 0 var(--space-lg) 0;
+    margin: 0;
 }
 
 .sidebar-menu-item {
@@ -801,74 +816,48 @@ textarea.form-control {
     display: flex;
     align-items: center;
     padding: var(--space-sm) var(--space-md);
-    border-radius: var(--border-radius-md);
-    color: var(--text-primary);
+    color: var(--text-secondary);
     text-decoration: none;
+    border-radius: var(--border-radius-sm);
     transition: background-color var(--transition-speed-fast);
 }
 
 .sidebar-menu-link:hover {
-    background-color: var(--bg-highlight);
+    background-color: var(--bg-hover);
 }
 
 .sidebar-menu-link.active {
-    background-color: var(--bg-highlight);
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
     font-weight: var(--font-weight-medium);
 }
 
 .sidebar-menu-icon {
+    width: 24px;
+    height: 24px;
     margin-right: var(--space-sm);
-    width: 20px;
-    text-align: center;
-}
-
-/* Информация о проекте в сайдбаре */
-.project-info {
-    background-color: var(--bg-primary);
-    border-radius: var(--border-radius-md);
-    padding: var(--space-md);
-    box-shadow: var(--shadow-sm);
-}
-
-.project-info-item {
-    margin-bottom: var(--space-sm);
-}
-
-.project-info-item:last-child {
-    margin-bottom: 0;
-}
-
-.project-info-label {
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
-    margin-bottom: 2px;
-}
-
-.project-info-value {
-    font-size: var(--font-size-sm);
-    color: var(--text-primary);
-}
-
-/* Кнопка сворачивания/разворачивания сайдбара */
-.toggle-sidebar-btn {
-    position: absolute;
-    right: -15px;
-    top: var(--space-md);
-    width: 30px;
-    height: 30px;
-    border-radius: var(--border-radius-circle);
-    background-color: var(--bg-primary);
-    border: var(--border-width-thin) var(--border-style-solid) var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    z-index: calc(var(--z-index-sidebar) + 1);
-    transition: transform var(--transition-speed-normal);
 }
 
-.sidebar.collapsed .toggle-sidebar-btn {
-    transform: rotate(180deg);
+/* Состояния для свернутого сайдбара */
+.sidebar.collapsed .sidebar-menu-link span:not(.sidebar-menu-icon) {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-menu-icon {
+    margin-right: 0;
+    width: 100%;
+}
+
+.sidebar.collapsed .sidebar-button span {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-button i {
+    margin-right: 0;
+    width: 100%;
 }
 
 /* Стили для основного контента */
@@ -876,8 +865,315 @@ textarea.form-control {
     margin-left: var(--sidebar-width);
     padding: var(--space-md);
     transition: margin-left var(--transition-speed-normal);
+    width: calc(100% - var(--sidebar-width));
 }
 
 .main-content.expanded {
-    margin-left: 30px;
+    margin-left: var(--sidebar-collapsed-width);
+    width: calc(100% - var(--sidebar-collapsed-width));
+}
+
+/* Стили для сетки изображений */
+.images-container {
+    margin-top: var(--space-xs);
+}
+
+/* Кнопка добавления поста */
+.add-post-btn {
+    background-color: var(--color-gray-100);
+    border: var(--border-width-thin) var(--border-style-dashed) var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-md);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all var(--transition-speed-fast);
+}
+
+.add-post-btn:hover {
+    background-color: var(--color-gray-200);
+}
+
+/* Кнопка добавления дня */
+.add-day-btn {
+    background-color: var(--color-gray-100);
+    border: var(--border-width-thin) var(--border-style-dashed) var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-lg);
+    min-width: var(--day-column-width);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all var(--transition-speed-fast);
+    margin-right: var(--space-lg);
+}
+
+.add-day-btn:hover {
+    background-color: var(--color-gray-200);
+}
+
+/* Стили для темной коричневой темы */
+
+/* Кнопки календаря */
+[data-theme="dark"] .calendar-button:hover {
+    background-color: var(--color-gray-300);
+    color: var(--text-primary);
+}
+
+/* Пост в темной теме */
+[data-theme="dark"] .post {
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .post-header {
+    border-bottom-color: var(--border-color);
+}
+
+/* Выпадающие меню */
+[data-theme="dark"] .dropdown-content {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background-color: var(--color-gray-300);
+}
+
+/* Инструменты редактирования */
+[data-theme="dark"] .editor-tools-panel,
+[data-theme="dark"] .images-tools-panel {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .tool-button {
+    color: var(--text-primary);
+    background-color: var(--color-gray-200);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .tool-button:hover {
+    background-color: var(--color-gray-300);
+}
+
+/* Сетка изображений */
+[data-theme="dark"] .images-grid {
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .image-preview {
+    border-color: var(--border-color);
+    background-color: var(--color-gray-300);
+}
+
+/* Кнопки навигации по календарю */
+[data-theme="dark"] .scroll-button {
+    background-color: var(--color-gray-200);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .scroll-button:hover {
+    background-color: var(--color-gray-300);
+}
+
+/* Стили для перетаскивания изображений */
+.image-preview.dragging {
+    opacity: 0.4;
+    cursor: move;
+    border: 2px dashed var(--color-primary);
+    outline: none;
+    z-index: 1000;
+}
+
+.image-preview.drag-over {
+    border: 2px dashed var(--color-primary);
+    background-color: rgba(74, 141, 242, 0.1);
+}
+
+.images-container.drag-over {
+    border: 2px dashed var(--color-primary);
+    background-color: rgba(74, 141, 242, 0.05);
+    padding: 5px;
+}
+
+/* Темная тема для перетаскивания */
+[data-theme="dark"] .image-preview.dragging {
+    border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .image-preview.drag-over,
+[data-theme="dark"] .images-container.drag-over {
+    border-color: var(--color-primary);
+    background-color: rgba(196, 154, 108, 0.15); /* Используем коричневый цвет для темной темы */
+}
+
+/* Стиль для подсказки о перетаскивании */
+.drag-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin: 5px 0;
+    padding: 2px 0;
+    grid-column: span 2; /* занимает всю ширину сетки */
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-radius: var(--border-radius-sm);
+}
+
+[data-theme="dark"] .drag-hint {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.drag-hint i {
+    margin-right: 5px;
+}
+
+/* Стили для кнопок управления текстом */
+.text-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.copy-text-btn,
+.edit-with-gpt-btn {
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 4px;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.3s;
+}
+
+.copy-text-btn:hover,
+.edit-with-gpt-btn:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.copy-text-btn i,
+.edit-with-gpt-btn i {
+    font-size: 14px;
+}
+
+/* Модальное окно для редактирования с GPT */
+#gptEditModal {
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+}
+
+#gptEditModal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.gpt-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg);
+}
+
+.gpt-loading .spinner {
+    margin-bottom: var(--space-md);
+}
+
+#gpt-prompt, #gpt-current-text, #gpt-result-text {
+    width: 100%;
+    margin-bottom: var(--space-md);
+    resize: vertical;
+}
+
+#gpt-result-text {
+    background-color: var(--color-success-light);
+    border-color: var(--color-success);
+}
+
+/* Указатель загрузки для GPT */
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+.gpt-loading .spinner {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--color-success-light);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.gpt-loading .spinner::after {
+    content: '🤖';
+    font-size: 30px;
+    line-height: 1;
+}
+
+/* Оформление для темной темы */
+[data-theme="dark"] .copy-text-btn, 
+[data-theme="dark"] .edit-with-gpt-btn {
+    color: var(--text-muted-dark);
+}
+
+[data-theme="dark"] #gpt-result-text {
+    background-color: var(--color-success-dark);
+    border-color: var(--color-success);
+    color: var(--text-light);
+}
+
+[data-theme="dark"] .gpt-loading .spinner {
+    background-color: var(--color-success-dark);
+}
+
+/* Стили для календаря и кнопки добавления дня */
+.add-day-container {
+    min-width: 240px;
+    height: 100%;
+    display: flex;
+    margin: 10px;
+}
+
+#add-day-btn {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    background-color: var(--primary-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    padding: 20px;
+}
+
+#add-day-btn:hover {
+    background-color: var(--primary-color-dark);
+}
+
+#add-day-btn i {
+    font-size: 24px;
+    margin-bottom: 10px;
 } 
